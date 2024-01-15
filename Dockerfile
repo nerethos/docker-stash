@@ -18,7 +18,6 @@ ENV HOME="/root" \
   PY_VENV="/pip-install/venv" \
   PATH="/pip-install/venv/bin:$PATH" \
   # hardware acceleration env
-  HWACCEL="NONE" \
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
   NVIDIA_VISIBLE_DEVICES="all" \
   # Logging
