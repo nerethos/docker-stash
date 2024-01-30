@@ -2,9 +2,7 @@
 
 FROM debian:bookworm-slim
 # labels
-ARG \
-  OFFICIAL_BUILD="false" \
-  DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND="noninteractive"
 
 # debian environment variables
 ENV HOME="/root" \
@@ -12,19 +10,13 @@ ENV HOME="/root" \
   LANG="en_US.UTF-8" \
   LANGUAGE="en_US:en" \
   # stash environment variables
-  STASH_CONFIG_FILE="/config/config.yml" \
-  USER="stash" \
-  # python env
-  PY_VENV="/pip-install/venv" \
-  PATH="/pip-install/venv/bin:$PATH" \
+  STASH_CONFIG_FILE="/root/.stash/config.yml" \
   # hardware acceleration env
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
   NVIDIA_VISIBLE_DEVICES="all" \
-  # Logging
-  LOGGER_LEVEL="1" \
-  HWACCEL="Jellyfin-ffmpeg"
+  PY_VENV="/pip-install/venv" \
+  PATH="/pip-install/venv/bin:$PATH" 
 
-COPY stash/root/ /
 RUN \
   echo "**** add contrib and non-free to sources ****" && \
     sed -i 's/main/main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources && \
@@ -40,7 +32,6 @@ RUN \
       ca-certificates \
       curl \
       gnupg \
-      gosu \
       libvips-tools \
       python3 \
       python3-pip \
@@ -51,20 +42,25 @@ RUN \
       yq && \
   echo "**** activate python virtual environment ****" && \
     python3 -m venv ${PY_VENV} && \
-  echo "**** install ruby gems ****" && \
+  echo "**** install plugin deps ****" && \
+    pip install \
+      bencoder.pyx \
+      bs4 \
+      cloudscraper \
+      lxml \
+      mechanicalsoup \
+      pystashlib \
+      requests \
+      requests-toolbelt \
+      stashapp-tools && \
     gem install \
       faraday && \
-  echo "**** link su-exec to gosu ****" && \
-    ln -s /usr/sbin/gosu /sbin/su-exec && \
   echo "**** generate locale ****" && \
     locale-gen en_US.UTF-8 && \
   echo "**** create stash user and make our folders ****" && \
     useradd -u 1000 -U -d /config -s /bin/false stash && \
     usermod -G users stash && \
-    usermod -G video stash && \
-    mkdir -p \
-      /config \
-      /defaults
+    usermod -G video stash 
 
 RUN \
   echo "*** install hardware acceleration dependencies ***" && \
@@ -72,18 +68,8 @@ RUN \
     echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
     apt-get update && \
     apt-get install --no-install-recommends --no-install-suggests -y \
-    jellyfin-ffmpeg6 \
+    jellyfin-ffmpeg5 \
     mesa-va-drivers && \
-  echo "**** linking jellyfin ffmpeg ****" && \
-    ln -s \
-      /usr/lib/jellyfin-ffmpeg/ffmpeg \
-      /usr/bin/ffmpeg && \
-    ln -s \
-      /usr/lib/jellyfin-ffmpeg/ffprobe \
-      /usr/bin/ffprobe && \
-    ln -s \
-      /usr/lib/jellyfin-ffmpeg/vainfo \
-      /usr/bin/vainfo && \
   echo "**** cleanup ****" && \
     apt-get autoremove && \
     apt-get clean && \
@@ -92,6 +78,8 @@ RUN \
       /var/lib/apt/lists/* \
       /var/tmp/* \
       /var/log/*
+
+ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
 
 RUN \    
   echo "**** install stash ****" && \
@@ -103,9 +91,11 @@ RUN \
       /usr/bin/stash -L \
       "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux"
 
+COPY entrypoint.sh /usr/local/bin
+
+RUN chmod +x -R /usr/local/bin
+
 RUN chmod +x /usr/bin/stash
 
-VOLUME /pip-install
-
 EXPOSE 9999
-CMD ["/bin/bash", "/opt/entrypoint.sh"]
+ENTRYPOINT ["entrypoint.sh"]
