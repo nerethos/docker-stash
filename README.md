@@ -8,7 +8,7 @@ Unofficial Docker image for https://github.com/stashapp/stash
 version: '3.4'
 services:
   stash:
-    image: stashapp/stash:latest
+    image: nerethos/stash-jellyfin-ffmpeg
     container_name: stash
     restart: unless-stopped
     ## the container's port must be the same with the STASH_PORT in the environment section
