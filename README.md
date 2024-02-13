@@ -1,6 +1,29 @@
 # docker-stash
 
-Unofficial Docker image for https://github.com/stashapp/stash
+Unofficial Docker image for https:/github.com/stashapp/stash
+
+The image replaces ffmpeg with jellyfin-ffmpeg and include the required python dependencies for scrapers and plugins.
+
+jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the current implementation in stash.
+
+To use HW acceleration in Stash ensure that it's enabled in the System>Transcoding settings and include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
+
+As of writing this, it's only possible to choose between hardware decoding or hardware encoding with Nvidia GPUs due to the way stash builds the ffmpeg command.
+
+Hopefully the stash team will fix this so that full hardware transcoding can be utilised with Nvidia GPUs.
+
+### Nvidia Decoding
+
+![nvidia decode example](images/nvidia_decode_args.png)
+
+### Nvidia Encoding
+
+![nvidia encode example](images/nvidia_encode_args.png)
+
+### Intel Transcoding
+
+Intel CPUs with an iGPU can utilise full hardware transcoding (decode and encode) with the below args.
+![intel transcode example](images/intel_transcode.png)
 
 ### docker-compose
 
