@@ -1,6 +1,6 @@
 # docker-stash
 
-Unofficial Docker image for https:/github.com/stashapp/stash
+Unofficial Docker image for https://github.com/stashapp/stash
 
 The image replaces ffmpeg with jellyfin-ffmpeg and include the required python dependencies for scrapers and plugins.
 
