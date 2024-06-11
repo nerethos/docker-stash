@@ -24,7 +24,7 @@ Intel CPUs with an iGPU can utilise full hardware transcoding (decode and encode
 
 ### docker-compose
 
-You must modify the below compose file to pass through your GPU to the docker container. See this helpful guide from Jellyfin for more info. https://jellyfin.org/docs/general/administration/hardware-acceleration/
+You must modify the below compose file to pass your GPU through to the docker container. See this helpful guide from Jellyfin for more info. https://jellyfin.org/docs/general/administration/hardware-acceleration/
 
 ```yaml
 services:
