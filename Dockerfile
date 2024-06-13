@@ -48,6 +48,9 @@ RUN \
       python3 \
       python3-pip \
       python3-venv \
+      python3-requests \
+      python3-requests-toolbelt \
+      python3-lxml \
       ruby \
       tzdata \
       wget \
