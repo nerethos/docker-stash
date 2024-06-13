@@ -87,12 +87,6 @@ RUN \
     jellyfin-ffmpeg5
 
 RUN \
-  echo "*** install hardware acceleration dependencies ***" && \
-    apt-get update && \
-    apt-get install --no-install-recommends --no-install-suggests -y \
-    mesa-va-drivers 
-
-RUN \
   echo "**** create stash user and make our folders ****" && \
     useradd -u 1000 -U -d /config -s /bin/false stash && \
     usermod -G users stash && \
