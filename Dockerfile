@@ -14,7 +14,6 @@ RUN \
       /stash -L \
       "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux"
 
-
 FROM debian:bookworm-slim AS app
 # labels
 ARG DEBIAN_FRONTEND="noninteractive"
@@ -33,14 +32,12 @@ ENV HOME="/root" \
   PATH="/pip-install/venv/bin:$PATH" 
 
 RUN \
-  echo "**** add contrib and non-free to sources ****" && \
-    sed -i 's/main/main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources
-RUN \
   echo "**** install locales ****" && \
     apt-get update && \
     apt-get install -y \
       apt-utils \
       locales
+
 RUN \
   echo "**** install packages ****" && \
     apt-get install -y \
