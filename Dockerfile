@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
 FROM debian:bookworm-slim AS binary
-RUN apt-get install -y \
-      curl \
-      gnupg
+RUN apt-get update && \
+    apt-get install -y \
+      curl 
 RUN \    
   echo "**** install stash ****" && \
     if [ -z ${STASH_RELEASE+x} ]; then \
@@ -34,15 +34,19 @@ ENV HOME="/root" \
 
 RUN \
   echo "**** add contrib and non-free to sources ****" && \
-    sed -i 's/main/main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's/main/main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources
+RUN \
   echo "**** install locales ****" && \
     apt-get update && \
     apt-get install -y \
-      locales && \
+      apt-utils \
+      locales
+RUN \
   echo "**** install packages ****" && \
     apt-get install -y \
       --no-install-recommends \
       --no-install-suggests \
+      gnupg \
       ca-certificates \
       libvips-tools \
       python3 \
@@ -54,7 +58,7 @@ RUN \
       ruby \
       tzdata \
       wget \
-      yq && \
+      yq
   # echo "**** activate python virtual environment ****" && \
   #   python3 -m venv ${PY_VENV} && \
   # echo "**** install plugin deps ****" && \
@@ -70,21 +74,31 @@ RUN \
   #     stashapp-tools && \
   #   gem install \
   #     faraday && \
+RUN \
   echo "**** generate locale ****" && \
-    locale-gen en_US.UTF-8 && \
+    locale-gen en_US.UTF-8
+
+RUN \
+  echo "*** install jellyfin-ffmpeg ***" && \
+    wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - && \
+    echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
+    apt-get update && \
+    apt-get install --no-install-recommends --no-install-suggests -y \
+    jellyfin-ffmpeg5
+
+RUN \
+  echo "*** install hardware acceleration dependencies ***" && \
+    apt-get update && \
+    apt-get install --no-install-recommends --no-install-suggests -y \
+    mesa-va-drivers 
+
+RUN \
   echo "**** create stash user and make our folders ****" && \
     useradd -u 1000 -U -d /config -s /bin/false stash && \
     usermod -G users stash && \
     usermod -G video stash 
 
 RUN \
-  echo "*** install hardware acceleration dependencies ***" && \
-    wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - && \
-    echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
-    apt-get update && \
-    apt-get install --no-install-recommends --no-install-suggests -y \
-    jellyfin-ffmpeg5 \
-    mesa-va-drivers && \
   echo "**** cleanup ****" && \
     apt-get autoremove && \
     apt-get clean && \
@@ -96,13 +110,9 @@ RUN \
 
 ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
 
-COPY --from=binary /stash /usr/bin/stash
+COPY --from=binary --chmod=755 /stash /usr/bin/stash
 
-COPY entrypoint.sh /usr/local/bin
-
-RUN chmod +x -R /usr/local/bin
-
-RUN chmod +x /usr/bin/stash
+COPY --chmod=755 entrypoint.sh /usr/local/bin
 
 EXPOSE 9999
 ENTRYPOINT ["entrypoint.sh"]
