@@ -59,21 +59,18 @@ RUN \
       tzdata \
       wget \
       yq
-  # echo "**** activate python virtual environment ****" && \
-  #   python3 -m venv ${PY_VENV} && \
-  # echo "**** install plugin deps ****" && \
-  #   pip install \
-  #     bencoder.pyx \
-  #     bs4 \
-  #     cloudscraper \
-  #     lxml \
-  #     mechanicalsoup \
-  #     pystashlib \
-  #     requests \
-  #     requests-toolbelt \
-  #     stashapp-tools && \
-  #   gem install \
-  #     faraday && \
+
+RUN \
+  echo "**** activate python virtual environment ****" && \
+    python3 -m venv ${PY_VENV} && \
+  echo "**** install plugin deps ****" && \
+    pip install \
+      bencoder.pyx \
+      cloudscraper \
+      stashapp-tools && \
+    gem install \
+      faraday
+      
 RUN \
   echo "**** generate locale ****" && \
     locale-gen en_US.UTF-8
