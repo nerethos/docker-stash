@@ -7,8 +7,6 @@ ARG DEBIAN_FRONTEND="noninteractive"
 # debian environment variables
 ENV HOME="/root" \
   TZ="Etc/UTC" \
-  LANG="en_US.UTF-8" \
-  LANGUAGE="en_US:en" \
   # stash environment variables
   STASH_CONFIG_FILE="/root/.stash/config.yml" \
   # hardware acceleration env
@@ -18,68 +16,51 @@ ENV HOME="/root" \
   PATH="/pip-install/venv/bin:$PATH" 
 
 RUN \
-  echo "**** add contrib and non-free to sources ****" && \
-    sed -i 's/main/main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources && \
-  echo "**** install apt-utils and locales ****" && \
+  echo "**** install locales ****" && \
     apt-get update && \
     apt-get install -y \
       apt-utils \
       locales && \
-  echo "**** install packages ****" && \
-    apt-get install -y \
-      --no-install-recommends \
-      --no-install-suggests \
-      ca-certificates \
-      curl \
-      gnupg \
-      libvips-tools \
-      python3 \
-      python3-pip \
-      python3-venv \
-      ruby \
-      tzdata \
-      wget \
-      yq && \
-  echo "**** activate python virtual environment ****" && \
-    python3 -m venv ${PY_VENV} && \
-  echo "**** install plugin deps ****" && \
-    pip install \
-      bencoder.pyx \
-      bs4 \
-      cloudscraper \
-      lxml \
-      mechanicalsoup \
-      pystashlib \
-      requests \
-      requests-toolbelt \
-      stashapp-tools && \
-    gem install \
-      faraday && \
   echo "**** generate locale ****" && \
-    locale-gen en_US.UTF-8 && \
-  echo "**** create stash user and make our folders ****" && \
-    useradd -u 1000 -U -d /config -s /bin/false stash && \
-    usermod -G users stash && \
-    usermod -G video stash 
+    sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
+    locale-gen
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8    
 
 RUN \
-  echo "*** install hardware acceleration dependencies ***" && \
-    wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - && \
-    echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
-    apt-get update && \
-    apt-get install --no-install-recommends --no-install-suggests -y \
-    jellyfin-ffmpeg5 \
-    mesa-va-drivers && \
-  echo "**** cleanup ****" && \
-    apt-get autoremove && \
-    apt-get clean && \
+  apt-get install -y \
+    --no-install-recommends \
+    --no-install-suggests \
+    gnupg \
+    ca-certificates \
+    libvips-tools \
+    python3 \
+    python3-pip \
+    python3-venv \
+    ruby \
+    tzdata \
+    wget \
+    curl \
+    yq && \
     rm -rf \
       /tmp/* \
       /var/lib/apt/lists/* \
       /var/tmp/* \
       /var/log/*
 
-ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
+RUN \
+  echo "*** install jellyfin-ffmpeg ***" && \
+    wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - && \
+    echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
+    apt-get update && \
+    apt-get install --no-install-recommends --no-install-suggests -y \
+    jellyfin-ffmpeg5 && \
+    rm -rf \
+      /tmp/* \
+      /var/lib/apt/lists/* \
+      /var/tmp/* \
+      /var/log/*
 
 RUN \    
   echo "**** install stash ****" && \
@@ -89,13 +70,29 @@ RUN \
     fi && \
     curl -o \
       /usr/bin/stash -L \
-      "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux"
+      "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux" && \
+    chmod +x /usr/bin/stash
 
-COPY entrypoint.sh /usr/local/bin
+RUN \
+  echo "**** create stash user and make our folders ****" && \
+    useradd -u 1000 -U -d /config -s /bin/false stash && \
+    usermod -G users stash && \
+    usermod -G video stash 
 
-RUN chmod +x -R /usr/local/bin
+RUN \
+  echo "**** cleanup ****" && \
+    apt-get purge -qq wget gnupg curl apt-utils && \
+    apt-get autoremove -qq && \
+    apt-get clean -qq && \
+    rm -rf \
+      /tmp/* \
+      /var/lib/apt/lists/* \
+      /var/tmp/* \
+      /var/log/*
 
-RUN chmod +x /usr/bin/stash
+ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
+
+COPY --chmod=755 entrypoint.sh /usr/local/bin
 
 EXPOSE 9999
 ENTRYPOINT ["entrypoint.sh"]

@@ -1,4 +1,21 @@
 #!/bin/bash
+echo '───────────────────────────────────────
+
+Installing plugin dependencies...
+
+───────────────────────────────────────
+'
+python3 -m venv ${PY_VENV}
+pip install \
+    bencoder.pyx \
+    cloudscraper \
+    lxml \
+    requests \
+    requests-toolbelt \
+    stashapp-tools
+gem install \
+    faraday
+
 PUID=${PUID:-911}
 PGID=${PGID:-911}
 if [ -z "${1}" ]; then
