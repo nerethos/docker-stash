@@ -1,6 +1,21 @@
 # syntax=docker/dockerfile:1
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim AS binary
+RUN apt-get install -y \
+      curl \
+      gnupg
+RUN \    
+  echo "**** install stash ****" && \
+    if [ -z ${STASH_RELEASE+x} ]; then \
+      STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
+      | awk '/tag_name/{print $4;exit}' FS='[""]'); \
+    fi && \
+    curl -o \
+      /stash -L \
+      "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux"
+
+
+FROM debian:bookworm-slim AS app
 # labels
 ARG DEBIAN_FRONTEND="noninteractive"
 
@@ -20,18 +35,15 @@ ENV HOME="/root" \
 RUN \
   echo "**** add contrib and non-free to sources ****" && \
     sed -i 's/main/main contrib non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources && \
-  echo "**** install apt-utils and locales ****" && \
+  echo "**** install locales ****" && \
     apt-get update && \
     apt-get install -y \
-      apt-utils \
       locales && \
   echo "**** install packages ****" && \
     apt-get install -y \
       --no-install-recommends \
       --no-install-suggests \
       ca-certificates \
-      curl \
-      gnupg \
       libvips-tools \
       python3 \
       python3-pip \
@@ -40,21 +52,21 @@ RUN \
       tzdata \
       wget \
       yq && \
-  echo "**** activate python virtual environment ****" && \
-    python3 -m venv ${PY_VENV} && \
-  echo "**** install plugin deps ****" && \
-    pip install \
-      bencoder.pyx \
-      bs4 \
-      cloudscraper \
-      lxml \
-      mechanicalsoup \
-      pystashlib \
-      requests \
-      requests-toolbelt \
-      stashapp-tools && \
-    gem install \
-      faraday && \
+  # echo "**** activate python virtual environment ****" && \
+  #   python3 -m venv ${PY_VENV} && \
+  # echo "**** install plugin deps ****" && \
+  #   pip install \
+  #     bencoder.pyx \
+  #     bs4 \
+  #     cloudscraper \
+  #     lxml \
+  #     mechanicalsoup \
+  #     pystashlib \
+  #     requests \
+  #     requests-toolbelt \
+  #     stashapp-tools && \
+  #   gem install \
+  #     faraday && \
   echo "**** generate locale ****" && \
     locale-gen en_US.UTF-8 && \
   echo "**** create stash user and make our folders ****" && \
@@ -81,15 +93,7 @@ RUN \
 
 ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
 
-RUN \    
-  echo "**** install stash ****" && \
-    if [ -z ${STASH_RELEASE+x} ]; then \
-      STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
-      | awk '/tag_name/{print $4;exit}' FS='[""]'); \
-    fi && \
-    curl -o \
-      /usr/bin/stash -L \
-      "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux"
+COPY --from=binary /stash /usr/bin/stash
 
 COPY entrypoint.sh /usr/local/bin
 
