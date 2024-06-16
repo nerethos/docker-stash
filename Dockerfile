@@ -61,7 +61,7 @@ RUN \
     echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
     apt-get update && \
     apt-get install --no-install-recommends --no-install-suggests -y \
-    jellyfin-ffmpeg5 && \
+    jellyfin-ffmpeg6 && \
     rm -rf \
       /tmp/* \
       /var/lib/apt/lists/* \
