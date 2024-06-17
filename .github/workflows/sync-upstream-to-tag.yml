@@ -1,5 +1,6 @@
 name: Sync with stashapp/stash
 on:
+  workflow_dispatch:
   push:
     tags:        
       - 'v*'
