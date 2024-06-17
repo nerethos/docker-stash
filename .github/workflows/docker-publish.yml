@@ -6,12 +6,10 @@ name: Docker
 # documentation.
 
 on:
-  schedule:
-    - cron: '21 14 * * *'
   push:
     branches: [ "main" ]
     # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ "main" ]
 
@@ -19,7 +17,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.stash }}
 
 
 jobs:
