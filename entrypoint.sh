@@ -13,6 +13,13 @@ pip install \
     requests \
     requests-toolbelt \
     stashapp-tools
+
+# Install additional Python packages if specified
+if [ -n "${ADDITIONAL_PYTHON_PACKAGES}" ]; then
+    echo "Installing additional Python packages: ${ADDITIONAL_PYTHON_PACKAGES}"
+    pip install ${ADDITIONAL_PYTHON_PACKAGES}
+fi
+
 gem install \
     faraday
 
