@@ -96,6 +96,7 @@ RUN \
       /var/tmp/* \
       /var/log/*
 
+ENV ADDITIONAL_PYTHON_PACKAGES=""
 ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
