@@ -43,6 +43,46 @@ Installing plugin dependencies...
     pip install -r $plugins_path/requirements.txt
 fi
 
+# Extract the scrapers_path from the config file
+scrapers_path=$(grep -E '^scrapers_path:' "$config_file" | sed 's/scrapers_path:[ ]*//')
+
+# Check if scrapers_path was found
+if [ -z "$scrapers_path" ]; then
+    echo "Warning: scrapers_path not found in $config_file"
+    echo "Skipping python modules installation"
+else
+    # Initialize an empty variable to store the contents
+    all_requirements=""
+
+    # Find all requirements.txt files and process them
+    while IFS= read -r -d '' file; do
+        # Append the contents of the file to the variable
+        all_requirements+="$(cat "$file")"$'\n'
+    done < <(find "$scrapers_path" -type f -name "requirements.txt" -print0)
+
+    # Deduplicate the requirements
+    unique_requirements=$(echo "$all_requirements" | sort | uniq)
+
+    # Define the output file path
+    output_file="$scrapers_path/requirements.txt"
+
+    # Ensure the output directory exists
+    mkdir -p "$(dirname "$output_file")"
+
+    # Write the unique requirements to the output file
+    echo "$unique_requirements" >"$output_file"
+
+    echo "Deduplicated requirements have been saved to $output_file"
+    echo '───────────────────────────────────────
+
+Installing scraper dependencies...
+
+───────────────────────────────────────
+    '
+    python3 -m venv ${PY_VENV}
+    pip install -r $scrapers_path/requirements.txt
+fi
+
 gem install \
     faraday
 
