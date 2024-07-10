@@ -6,15 +6,11 @@ The image replaces ffmpeg with jellyfin-ffmpeg and include the required python d
 
 jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the current implementation in stash.
 
-For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
+For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
 
-### Nvidia Decoding
+### Nvidia
 
 ![nvidia decode example](images/nvidia_decode_args.png)
-
-### Nvidia Encoding
-
-![nvidia encode example](images/nvidia_encode_args.png)
 
 ### Intel Transcoding
 
