@@ -16,6 +16,7 @@ all_requirements=""
 if [ -z "$plugins_path" ]; then
     echo "Warning: plugins_path not found in $config_file"
 else
+    echo "Parsing plugin dependencies"
     # Find all requirements.txt files in plugins_path and process them
     while IFS= read -r -d '' file; do
         # Append the contents of the file to the variable
@@ -27,6 +28,7 @@ fi
 if [ -z "$scrapers_path" ]; then
     echo "Warning: scrapers_path not found in $config_file"
 else
+    echo "Parsing scraper dependencies"
     # Find all requirements.txt files in scrapers_path and process them
     while IFS= read -r -d '' file; do
         # Append the contents of the file to the variable
@@ -38,8 +40,11 @@ fi
 if [ -z "$all_requirements" ]; then
     echo "No requirements found in either path."
 else
-    # Deduplicate the requirements
-    unique_requirements=$(echo "$all_requirements" | sort | uniq)
+    # Define a temporary file for combined requirements
+    temp_requirements_file=$(mktemp)
+
+    # Write the combined requirements to the temporary file
+    echo "$all_requirements" >"$temp_requirements_file"
 
     # Define the output file path
     output_file="/root/.stash/requirements.txt"
@@ -47,8 +52,18 @@ else
     # Ensure the output directory exists
     mkdir -p "$(dirname "$output_file")"
 
-    # Write the unique requirements to the output file
-    echo "$unique_requirements" >"$output_file"
+    # Create a virtual environment and activate it
+    python3 -m venv ${PY_VENV}
+    source ${PY_VENV}/bin/activate
+
+    # Install pip-tools
+    pip install pip-tools
+
+    # Use pip-compile to resolve and deduplicate the requirements
+    pip-compile "$temp_requirements_file" --output-file "$output_file"
+
+    # Clean up the temporary file
+    rm "$temp_requirements_file"
 
     echo "Deduplicated requirements have been saved to $output_file"
     echo '───────────────────────────────────────
@@ -57,7 +72,8 @@ Installing dependencies...
 
 ───────────────────────────────────────
     '
-    python3 -m venv ${PY_VENV}
+
+    # Install the dependencies from the output file
     pip install -r $output_file
 fi
 
