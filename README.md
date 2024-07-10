@@ -18,6 +18,14 @@ Intel CPUs with an iGPU can utilise full hardware transcoding (decode and encode
 
 ![intel transcode example](images/intel_transcode.png)
 
+### How To Install Plugin Dependencies Automatically
+*Note: Your plugin must have a requirements file for this to work*
+
+1. Install plugins through the stash interface or manually
+2. Restart the container
+3. Dependencies will be parsed and installed for all plugins in the stash plugin folder
+4. Profit?!
+
 ### docker-compose
 
 You must modify the below compose file to pass your GPU through to the docker container. See this helpful guide from Jellyfin for more info. https://jellyfin.org/docs/general/administration/hardware-acceleration/
