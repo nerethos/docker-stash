@@ -14,9 +14,7 @@ For live transcoding using HW acceleration ensure that it's enabled in the Syste
 
 ### Intel Transcoding
 
-Intel CPUs with an iGPU can utilise full hardware transcoding (decode and encode) with the below args.
-
-![intel transcode example](images/intel_transcode.png)
+Intel CPUs with an iGPU can utilise full hardware transcoding (decode and encode) with `-hwaccel auto`
 
 ### How To Install Plugin Dependencies Automatically
 *Note: Your plugin must have a requirements file for this to work*
