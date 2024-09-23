@@ -1,4 +1,4 @@
-version=v0.26.2
+version=v0.27.0
 .PHONY: build
 build:
 	docker build --pull --no-cache -t nerethos/stash-jellyfin-ffmpeg:latest -t nerethos/stash-jellyfin-ffmpeg:${version}  -f ./Dockerfile .
