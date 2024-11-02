@@ -5,3 +5,4 @@ images/*
 LICENSE
 README.md
 test/
+Makefile
