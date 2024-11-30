@@ -1,7 +1,12 @@
 #!/bin/bash
-
+mkdir ${STASH_CACHE}
+mkdir ${STASH_GENERATED}
+mkdir ${STASH_METADATA}
+mkdir ${STASH_PLUGINS}
+mkdir ${STASH_SCRAPERS}
+chown -R ${PUID}:${PUID} /config
 # Path to the config file
-config_file="/root/.stash/config.yml"
+config_file=${STASH_CONFIG_FILE}
 
 # Extract the plugins_path from the config file
 plugins_path=$(grep -E '^plugins_path:' "$config_file" | sed 's/plugins_path:[ ]*//')
@@ -77,14 +82,18 @@ Installing dependencies...
     pip install -r $output_file
 fi
 
-gem install \
+if which ruby >/dev/null && which gem >/dev/null; then
+    PATH="$(ruby -r rubygems -e 'puts Gem.user_dir')/bin:$PATH"
+fi
+
+gem install --user-install --no-document \
     faraday
 
-PUID=${PUID:-911}
-PGID=${PGID:-911}
-if [ -z "${1}" ]; then
-    set -- "stash"
-fi
+# PUID=${PUID:-911}
+# PGID=${PGID:-911}
+# if [ -z "${1}" ]; then
+#     set -- "stash"
+# fi
 echo '
 ───────────────────────────────────────
 
@@ -96,12 +105,12 @@ To support stash development visit:
 https://opencollective.com/stashapp
 
 ───────────────────────────────────────'
-echo '
-Changing to user provided UID & GID...
-'
+# echo '
+# Changing to user provided UID & GID...
+# '
 
-groupmod -o -g "$PGID" stash
-usermod -o -u "$PUID" stash
+# groupmod -o -g "$PGID" stash
+# usermod -o -u "$PUID" stash
 echo '
 ───────────────────────────────────────
 GID/UID
@@ -116,4 +125,4 @@ Starting stash...
 
 ───────────────────────────────────────
 '
-exec "$@"
+exec stash
