@@ -1,5 +1,10 @@
 # docker-stash
 
+[![Docker pulls](https://img.shields.io/docker/pulls/nerethos/stash-jellyfin-ffmpeg.svg)](https://hub.docker.com/r/nerethos/stash-jellyfin-ffmpeg 'DockerHub')
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/nerethos/stash-jellyfin-ffmpeg/latest)
+![Docker Image Version (tag)](https://img.shields.io/docker/v/nerethos/stash-jellyfin-ffmpeg/latest)
+![GitHub Repo stars](https://img.shields.io/github/stars/nerethos/docker-stash)
+
 Unofficial Docker image for https://github.com/stashapp/stash based on the official container, with extras.
 
 The image replaces ffmpeg with jellyfin-ffmpeg and include the required python dependencies for scrapers and plugins.
