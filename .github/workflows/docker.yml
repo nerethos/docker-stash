@@ -42,7 +42,7 @@ jobs:
           images: |
             nerethos/stash-jellyfin-ffmpeg
             ghcr.io/${{ github.repository }}
-          flavor: latest=auto
+          flavor: latest=true
           tags: |
             type=raw,${{ env.UPSTREAM_VERSION }}
             type=sha,prefix=${{ env.UPSTREAM_VERSION }}-
