@@ -46,7 +46,7 @@ RUN \
   chmod +x /usr/bin/stash
 
 RUN \
-  useradd -u 911 -U -d /config -s /bin/false stash && \
+  useradd -u 1000 -U -d /config -s /bin/false stash && \
   usermod -G users stash && \
   usermod -G video stash
 
