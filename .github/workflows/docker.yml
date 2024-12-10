@@ -44,8 +44,8 @@ jobs:
             ghcr.io/${{ github.repository }}
           flavor: latest=true
           tags: |
-            type=raw,${{ env.UPSTREAM_VERSION }}
             type=sha,prefix=${{ env.UPSTREAM_VERSION }}-
+            type=raw,${{ env.UPSTREAM_VERSION }}
 
       - name: Build and push Docker images
         id: push
