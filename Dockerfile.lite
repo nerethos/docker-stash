@@ -50,6 +50,9 @@ RUN \
   usermod -G users stash && \
   usermod -G video stash
 
+RUN \
+  apk del curl
+
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
 EXPOSE 9999
