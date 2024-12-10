@@ -47,6 +47,9 @@ jobs:
             type=sha,prefix=${{ env.UPSTREAM_VERSION }}-
             type=raw,${{ env.UPSTREAM_VERSION }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push Docker images
         id: push
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
