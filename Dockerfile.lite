@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1
+
+FROM alpine:3.21
+
+LABEL \
+  org.opencontainers.image.title="Stash" \
+  org.opencontainers.image.description="An organizer for your porn, written in Go." \
+  org.opencontainers.image.url="https://github.com/nerethos/docker-stash" \
+  org.opencontainers.image.documentation="https://docs.stashapp.cc" \
+  org.opencontainers.image.source="https://github.com/nerethos/docker-stash" \
+  org.opencontainers.image.authors="nerethos"
+
+ENV \
+  HOME="/root" \
+  TZ="Etc/UTC" \
+  # stash environment variables
+  STASH_CONFIG_FILE="/root/.stash/config.yml" \
+  PY_VENV="/pip-install/venv" \
+  PATH="/pip-install/venv/bin:$PATH" 
+
+RUN \
+  apk add --no-cache \
+    bash \
+    ca-certificates \
+    curl \
+    ffmpeg \
+    python3 \
+    py3-requests \
+    py3-requests-toolbelt \
+    py3-lxml \
+    py3-pip \
+    ruby \
+    shadow \
+    tzdata \
+    vips \
+    vips-tools
+
+RUN \    
+  if [ -z ${STASH_RELEASE+x} ]; then \
+    STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
+    | awk '/tag_name/{print $4;exit}' FS='[""]'); \
+  fi && \
+  curl -o \
+    /usr/bin/stash -L \
+    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux" && \
+  chmod +x /usr/bin/stash
+
+RUN \
+  useradd -u 911 -U -d /config -s /bin/false stash && \
+  usermod -G users stash && \
+  usermod -G video stash
+
+COPY --chmod=755 entrypoint.sh /usr/local/bin
+
+EXPOSE 9999
+CMD ["entrypoint.sh"]
