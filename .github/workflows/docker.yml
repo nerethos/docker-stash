@@ -44,7 +44,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/stash
           flavor: latest=true
           tags: |
-            type=raw,priority=998,${{ env.UPSTREAM_VERSION }}
+            type=raw,priority=997,${{ env.UPSTREAM_VERSION }}
             type=sha,priority=998,prefix=${{ env.UPSTREAM_VERSION }}-
             type=sha,priority=999,prefix=,suffix=,format=short
 
