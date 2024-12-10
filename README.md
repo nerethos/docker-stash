@@ -7,9 +7,13 @@
 
 Unofficial Docker image for https://github.com/stashapp/stash based on the official container, with extras.
 
-The image replaces ffmpeg with jellyfin-ffmpeg and include the required python dependencies for scrapers and plugins.
+# About
+
+The regular image replaces ffmpeg with jellyfin-ffmpeg and includes a startup script that parses and installs all required dependencies for your installed plugins/scrapers.
 
 jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the current implementation in stash.
+
+The lite image is Alpine linux based for a smaller, more secure container. It has no hardware acceleration support, but retains the dependency installer script.
 
 For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
 
