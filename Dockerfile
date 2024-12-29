@@ -17,22 +17,15 @@ ARG TARGETVARIANT
 
 # debian environment variables
 ENV \
-  HOME="/config" \
+  HOME="/root" \
   TZ="Etc/UTC" \
   # stash environment variables
-  PUID=1000 \
-  PGID=1000 \
-  STASH_CONFIG_FILE="/config/config.yml" \
-  STASH_GENERATED="/config/generated/" \
-  STASH_METADATA="/config/metadata/" \
-  STASH_CACHE="/config/cache/" \
-  STASH_PLUGINS="/config/plugins/" \
-  STASH_SCRAPERS="/config/scrapers" \
+  STASH_CONFIG_FILE="/root/.stash/config.yml" \
   # hardware acceleration env
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
   NVIDIA_VISIBLE_DEVICES="all" \
-  PY_VENV="/venv" \
-  PATH="/venv/bin:/config/.local:$PATH" 
+  PY_VENV="/pip-install/venv" \
+  PATH="/pip-install/venv/bin:$PATH" 
 
 RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
 
@@ -108,11 +101,9 @@ RUN \
   chmod +x /usr/bin/stash
 
 RUN \
-  mkdir -p /config && \
-  useradd -u ${PUID} -U -d /config -s /bin/false stash && \
+  useradd -u 1000 -U -d /config -s /bin/false stash && \
   usermod -G users stash && \
-  usermod -G video stash && \
-  chown -R ${PUID} /config
+  usermod -G video stash 
 
 RUN \
   apt-get purge -qq wget gnupg curl apt-utils && \
@@ -128,7 +119,5 @@ ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
-USER stash
-WORKDIR /config
 EXPOSE 9999
 ENTRYPOINT ["entrypoint.sh"]
