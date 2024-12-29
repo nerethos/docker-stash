@@ -21,7 +21,7 @@ ENV \
   TZ="Etc/UTC" \
   # stash environment variables
   PUID=1000 \
-  GUID=1000 \
+  PGID=1000 \
   STASH_CONFIG_FILE="/config/config.yml" \
   STASH_GENERATED="/config/generated/" \
   STASH_METADATA="/config/metadata/" \

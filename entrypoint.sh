@@ -4,7 +4,7 @@ mkdir ${STASH_GENERATED}
 mkdir ${STASH_METADATA}
 mkdir ${STASH_PLUGINS}
 mkdir ${STASH_SCRAPERS}
-chown -R ${PUID}:${PUID} /config
+chown -R ${PUID}:${PGID} /config
 # Path to the config file
 config_file=${STASH_CONFIG_FILE}
 
