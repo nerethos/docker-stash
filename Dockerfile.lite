@@ -1,13 +1,43 @@
 # syntax=docker/dockerfile:1
 
-FROM --platform=$BUILDPLATFORM alpine:3.21 AS builder
+FROM --platform=$BUILDPLATFORM alpine:3.21
+
+LABEL \
+  org.opencontainers.image.title="Stash" \
+  org.opencontainers.image.description="An organizer for your porn, written in Go." \
+  org.opencontainers.image.url="https://github.com/nerethos/docker-stash" \
+  org.opencontainers.image.documentation="https://docs.stashapp.cc" \
+  org.opencontainers.image.source="https://github.com/nerethos/docker-stash" \
+  org.opencontainers.image.authors="nerethos"
+
+ENV \
+  HOME="/root" \
+  TZ="Etc/UTC" \
+  # stash environment variables
+  STASH_CONFIG_FILE="/root/.stash/config.yml" \
+  PY_VENV="/pip-install/venv" \
+  PATH="/pip-install/venv/bin:$PATH"
 
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETVARIANT
 
 RUN \
-  apk add --no-cache curl
+  apk add --no-cache \
+    bash \
+    ca-certificates \
+    curl \
+    ffmpeg \
+    python3 \
+    py3-requests \
+    py3-requests-toolbelt \
+    py3-lxml \
+    py3-pip \
+    ruby \
+    shadow \
+    tzdata \
+    vips \
+    vips-tools
 
 RUN \
   set -ex && \
@@ -26,50 +56,17 @@ RUN \
     | awk '/tag_name/{print $4;exit}' FS='[""]'); \
   fi && \
   curl -o \
-    /stash -L \
-    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/${STASH_ARCH}"
-
-FROM --platform=$BUILDPLATFORM alpine:3.21 AS runtime
-
-LABEL \
-  org.opencontainers.image.title="Stash" \
-  org.opencontainers.image.description="An organizer for your porn, written in Go." \
-  org.opencontainers.image.url="https://github.com/nerethos/docker-stash" \
-  org.opencontainers.image.documentation="https://docs.stashapp.cc" \
-  org.opencontainers.image.source="https://github.com/nerethos/docker-stash" \
-  org.opencontainers.image.authors="nerethos"
-
-ENV \
-  HOME="/root" \
-  TZ="Etc/UTC" \
-  # stash environment variables
-  STASH_CONFIG_FILE="/root/.stash/config.yml" \
-  PY_VENV="/pip-install/venv" \
-  PATH="/pip-install/venv/bin:$PATH"
-
-RUN \
-  apk add --no-cache \
-    bash \
-    ca-certificates \
-    ffmpeg \
-    python3 \
-    py3-requests \
-    py3-requests-toolbelt \
-    py3-lxml \
-    py3-pip \
-    ruby \
-    shadow \
-    tzdata \
-    vips \
-    vips-tools
+    /usr/bin/stash -L \
+    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/${STASH_ARCH}" && \
+  chmod +x /usr/bin/stash
 
 RUN \
   useradd -u 1000 -U -d /config -s /bin/false stash && \
   usermod -G users stash && \
   usermod -G video stash
 
-COPY --from=builder /stash /usr/local/bin/stash
-RUN chmod +x /usr/local/bin/stash
+RUN \
+  apk del curl
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
