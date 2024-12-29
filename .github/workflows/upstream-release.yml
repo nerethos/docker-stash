@@ -1,0 +1,13 @@
+name: Upstream Stash Release
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'UPSTREAM_VERSION'
+  workflow_dispatch:
+jobs:
+  docker:
+    uses: ./github/workflows/docker.yml
+  docker-lite:
+    uses: ./github/workflows/docker.lite.yml
