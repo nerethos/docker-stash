@@ -11,12 +11,19 @@ LABEL \
   org.opencontainers.image.authors="nerethos"
 
 ENV \
-  HOME="/root" \
+  HOME="/config" \
   TZ="Etc/UTC" \
   # stash environment variables
-  STASH_CONFIG_FILE="/root/.stash/config.yml" \
-  PY_VENV="/pip-install/venv" \
-  PATH="/pip-install/venv/bin:$PATH"
+  PUID=1000 \
+  PGID=1000 \
+  STASH_CONFIG_FILE="/config/config.yml" \
+  STASH_GENERATED="/config/generated/" \
+  STASH_METADATA="/config/metadata/" \
+  STASH_CACHE="/config/cache/" \
+  STASH_PLUGINS="/config/plugins/" \
+  STASH_SCRAPERS="/config/scrapers" \
+  PY_VENV="/venv" \
+  PATH="/venv/bin:/config/.local:$PATH" 
 
 ARG TARGETPLATFORM
 ARG TARGETARCH
@@ -61,14 +68,17 @@ RUN \
   chmod +x /usr/bin/stash
 
 RUN \
-  useradd -u 1000 -U -d /config -s /bin/false stash && \
+  useradd -u ${PUID} -U -d /config -s /bin/false stash && \
   usermod -G users stash && \
-  usermod -G video stash
+  usermod -G video stash && \
+  chown -R ${PUID} /config
 
 RUN \
   apk del curl
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
+USER stash
+WORKDIR /config
 EXPOSE 9999
 CMD ["entrypoint.sh"]
