@@ -1,7 +1,7 @@
 .git
 .github
 .gitattributes
-images/*
+images/
 LICENSE
 README.md
 test/
