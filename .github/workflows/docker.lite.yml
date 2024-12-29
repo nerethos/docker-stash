@@ -67,6 +67,7 @@ jobs:
           provenance: mode=max
           sbom: true
           tags: |
-            lite
+            nerethos/stash-jellyfin-ffmpeg:lite
+            nerethos/stash:lite
             ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
