@@ -16,7 +16,11 @@ ENV \
   # stash environment variables
   STASH_CONFIG_FILE="/root/.stash/config.yml" \
   PY_VENV="/pip-install/venv" \
-  PATH="/pip-install/venv/bin:$PATH" 
+  PATH="/pip-install/venv/bin:$PATH"
+
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETVARIANT
 
 RUN \
   apk add --no-cache \
