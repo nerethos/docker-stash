@@ -5,7 +5,7 @@
 ![Docker Image Version (tag)](https://img.shields.io/docker/v/nerethos/stash-jellyfin-ffmpeg/latest)
 ![GitHub Repo stars](https://img.shields.io/github/stars/nerethos/docker-stash)
 
-Unofficial Docker image for https://github.com/stashapp/stash based on the official container, with extras.
+Unofficial Docker image for https://github.com/stashapp/stash, with extras.
 
 # About
 
@@ -13,27 +13,45 @@ The regular image replaces ffmpeg with jellyfin-ffmpeg and includes a startup sc
 
 jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the current implementation in stash.
 
-The lite image is Alpine linux based for a smaller, more secure container. It has no hardware acceleration support, but retains the dependency installer script.
+There is a "lite" image that's based on Alpine linux based for a smaller, more secure container. It has no hardware acceleration support, but retains the dependency installer script.
 
 For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
 
-### Nvidia
+# Tags
+
+| Tag | Description |
+| --- | ----------- |
+| latest | HW acceleration + entrypoint script. Most up-to-date|
+| lite   | Entrypoint script (no HW acceleration, Alpine equivalent of latest) |
+| v*.*.* | latest, but pinned to a specific Stash version |
+| lite-v*.*.* | lite, but pinned to a specific Stash version |
+
+There are also git commit SHA tags for both image types.
+
+# Hardware Acceleration Setup
+
+## Nvidia
 
 ![nvidia decode example](images/nvidia_decode_args.png)
 
-### Intel Transcoding
+## Intel Transcoding
 
 Intel CPUs with an iGPU can utilise full hardware transcoding (decode and encode) with `-hwaccel auto`
 
-### How To Install Plugin Dependencies Automatically
+## AMD
+
+AMD is currently not supported by Stash, however jellyfin-ffmpeg has full support.
+
+# How To Install Plugin/Scraper Dependencies Automatically
 *Note: Your plugin must have a requirements file for this to work*
 
 1. Install plugins through the stash interface or manually
 2. Restart the container
-3. Dependencies will be parsed and installed for all plugins in the stash plugin folder
-4. Profit?!
+3. Dependencies will be parsed and installed for all plugins/scrapers in the stash folder
+4. ????
+5. Profit.
 
-### docker-compose
+# docker-compose
 
 You must modify the below compose file to pass your GPU through to the docker container. See this helpful guide from Jellyfin for more info. https://jellyfin.org/docs/general/administration/hardware-acceleration/
 
