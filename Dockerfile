@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM ubuntu:24.04
+FROM --platform=$BUILDPLATFORM ubuntu:24.04
 # labels
 LABEL \
   org.opencontainers.image.title="Stash" \
@@ -10,8 +10,10 @@ LABEL \
   org.opencontainers.image.source="https://github.com/nerethos/docker-stash" \
   org.opencontainers.image.authors="nerethos"
 
-ARG \
-  DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND="noninteractive"
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETVARIANT
 
 # debian environment variables
 ENV \
@@ -84,14 +86,25 @@ RUN \
     /var/tmp/* \
     /var/log/*
 
-RUN \    
+RUN \
+  set -ex && \
+  echo "TARGETPLATFORM=$TARGETPLATFORM" && \
+  echo "TARGETARCH=$TARGETARCH" && \
+  echo "TARGETVARIANT=$TARGETVARIANT" && \
+  case "${TARGETARCH}${TARGETVARIANT}" in \
+      "amd64") STASH_ARCH="stash-linux" ;; \
+      "armv7") STASH_ARCH="stash-linux-arm32v7" ;; \
+      "armv6") STASH_ARCH="stash-linux-arm32v6" ;; \
+      "arm64") STASH_ARCH="stash-linux-arm64v8" ;; \
+      *) echo "Unsupported architecture: ${TARGETARCH}${TARGETVARIANT}"; exit 1 ;; \
+  esac && \
   if [ -z ${STASH_RELEASE+x} ]; then \
     STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
     | awk '/tag_name/{print $4;exit}' FS='[""]'); \
   fi && \
   curl -o \
     /usr/bin/stash -L \
-    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux" && \
+    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/${STASH_ARCH}" && \
   chmod +x /usr/bin/stash
 
 RUN \

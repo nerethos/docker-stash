@@ -5,38 +5,63 @@
 ![Docker Image Version (tag)](https://img.shields.io/docker/v/nerethos/stash-jellyfin-ffmpeg/latest)
 ![GitHub Repo stars](https://img.shields.io/github/stars/nerethos/docker-stash)
 
-Unofficial Docker image for https://github.com/stashapp/stash based on the official container, with extras.
+Unofficial Docker image for https://github.com/stashapp/stash, with extras.
 
-The image replaces ffmpeg with jellyfin-ffmpeg and include the required python dependencies for scrapers and plugins.
+# About
 
-jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the current implementation in stash.
+This is intended to be a drop-in replacement for the original container image from the Stash maintainers. As such, the container is **not** root-less and uses the same configuration and storage paths.
+
+The regular image replaces ffmpeg with jellyfin-ffmpeg. jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the regular ffmpeg binaries.
+
+There is a *"lite"* image that's based on Alpine linux for a smaller, more secure container. It has no hardware acceleration support.
+
+Both images include an entrypoint script that parses and installs all required dependencies for your installed plugins/scrapers.
+
+# Tags
+The image originally started at `nerethos/stash-jellyfin-ffmpeg` and will continue to be available. For (mostly my own) convenience, the image is now also available from ghcr.io and `nerethos/stash` with the tags below.
+
+| Tag | Example | Features |
+| --- | ------- |--------- |
+| latest | `nerethos/stash:latest`<br>`ghcr.io/nerethos/stash:latest` | HW acceleration + entrypoint script. Most up-to-date|
+| lite   | `nerethos/stash:lite`<br>`ghcr.io/nerethos/stash:lite` | Entrypoint script (Alpine equivalent of latest) |
+| v*.*.* | `nerethos/stash:v0.27.2`<br>`ghcr.io/nerethos/stash:v0.27.2` | latest, but pinned to a specific Stash version |
+| lite-v*.*.* | `nerethos/stash:lite-v0.27.2`<br>`ghcr.io/nerethos/stash:lite-v0.27.2` | lite, but pinned to a specific Stash version |
+
+There are also git commit SHA tags for both image types.
+
+# Hardware Acceleration Setup
 
 For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
 
-### Nvidia
+## Nvidia
 
 ![nvidia decode example](images/nvidia_decode_args.png)
 
-### Intel Transcoding
+## Intel Transcoding
 
 Intel CPUs with an iGPU can utilise full hardware transcoding (decode and encode) with `-hwaccel auto`
 
-### How To Install Plugin Dependencies Automatically
+## AMD
+
+AMD is currently not supported by Stash, however jellyfin-ffmpeg has full support.
+
+# How To Install Plugin/Scraper Dependencies Automatically
 *Note: Your plugin must have a requirements file for this to work*
 
-1. Install plugins through the stash interface or manually
+1. Install plugins/scrapers through the stash interface or manually
 2. Restart the container
-3. Dependencies will be parsed and installed for all plugins in the stash plugin folder
-4. Profit?!
+3. Dependencies will be parsed and installed for all plugins/scrapers in the stash folder
+4. ????
+5. Profit.
 
-### docker-compose
+# docker-compose
 
 You must modify the below compose file to pass your GPU through to the docker container. See this helpful guide from Jellyfin for more info. https://jellyfin.org/docs/general/administration/hardware-acceleration/
 
 ```yaml
 services:
   stash:
-    image: nerethos/stash-jellyfin-ffmpeg
+    image: nerethos/stash
     container_name: stash
     restart: unless-stopped
     ## the container's port must be the same with the STASH_PORT in the environment section
@@ -51,7 +76,7 @@ services:
         max-size: "2m"
     environment:
       - PUID=1000
-      - PGUID=1000
+      - PGID=1000
       - STASH_STASH=/data/
       - STASH_GENERATED=/generated/
       - STASH_METADATA=/metadata/
