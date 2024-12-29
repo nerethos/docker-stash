@@ -47,7 +47,7 @@ ENV \
   PY_VENV="/pip-install/venv" \
   PATH="/pip-install/venv/bin:$PATH"
 
-  RUN \
+RUN \
   apk add --no-cache \
     bash \
     ca-certificates \
