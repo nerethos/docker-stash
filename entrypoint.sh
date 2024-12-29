@@ -1,10 +1,5 @@
 #!/bin/bash
-mkdir ${STASH_CACHE}
-mkdir ${STASH_GENERATED}
-mkdir ${STASH_METADATA}
-mkdir ${STASH_PLUGINS}
-mkdir ${STASH_SCRAPERS}
-chown -R ${PUID}:${PGID} /config
+
 # Path to the config file
 config_file=${STASH_CONFIG_FILE}
 
@@ -52,7 +47,7 @@ else
     echo "$all_requirements" >"$temp_requirements_file"
 
     # Define the output file path
-    output_file="/root/.stash/requirements.txt"
+    output_file="/config/requirements.txt"
 
     # Ensure the output directory exists
     mkdir -p "$(dirname "$output_file")"
@@ -89,11 +84,6 @@ fi
 gem install --user-install --no-document \
     faraday
 
-# PUID=${PUID:-911}
-# PGID=${PGID:-911}
-# if [ -z "${1}" ]; then
-#     set -- "stash"
-# fi
 echo '
 ───────────────────────────────────────
 
@@ -102,22 +92,15 @@ echo '
 ───────────────────────────────────────'
 echo '
 To support stash development visit:
-https://opencollective.com/stashapp
-
-───────────────────────────────────────'
-# echo '
-# Changing to user provided UID & GID...
-# '
-
-# groupmod -o -g "$PGID" stash
-# usermod -o -u "$PUID" stash
+https://opencollective.com/stashapp'
 echo '
 ───────────────────────────────────────
-GID/UID
+
+UID/GID
+
 ───────────────────────────────────────'
-echo "
-UID:${PUID}
-GID:${PGID}"
+echo ''
+id
 echo '
 ───────────────────────────────────────'
 echo '

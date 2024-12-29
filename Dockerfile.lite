@@ -14,8 +14,7 @@ ENV \
   HOME="/config" \
   TZ="Etc/UTC" \
   # stash environment variables
-  PUID=1000 \
-  PGID=1000 \
+  STASH_CONFIG="/config" \
   STASH_CONFIG_FILE="/config/config.yml" \
   STASH_GENERATED="/config/generated/" \
   STASH_METADATA="/config/metadata/" \
@@ -68,11 +67,18 @@ RUN \
   chmod +x /usr/bin/stash
 
 RUN \
-  mkdir -p /config && \
-  useradd -u ${PUID} -U -d /config -s /bin/false stash && \
+  mkdir -p ${PY_VENV} && \
+  mkdir ${STASH_CONFIG} && \
+  mkdir ${STASH_CACHE} && \
+  mkdir ${STASH_GENERATED} && \
+  mkdir ${STASH_METADATA} && \
+  mkdir ${STASH_PLUGINS} && \
+  mkdir ${STASH_SCRAPERS} && \
+  useradd -u 1000 -U -d ${STASH_CONFIG} -s /bin/false stash && \
   usermod -G users stash && \
   usermod -G video stash && \
-  chown -R ${PUID} /config
+  chown -R stash ${STASH_CONFIG} && \
+  chown -R stash ${PY_VENV}
 
 RUN \
   apk del curl
@@ -80,6 +86,6 @@ RUN \
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
 USER stash
-WORKDIR /config
+WORKDIR ${STASH_CONFIG}
 EXPOSE 9999
-CMD ["entrypoint.sh"]
+ENTRYPOINT ["entrypoint.sh"]
