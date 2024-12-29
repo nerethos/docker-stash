@@ -51,7 +51,7 @@ services:
         max-size: "2m"
     environment:
       - PUID=1000
-      - PGUID=1000
+      - PGID=1000
       - STASH_STASH=/data/
       - STASH_GENERATED=/generated/
       - STASH_METADATA=/metadata/
