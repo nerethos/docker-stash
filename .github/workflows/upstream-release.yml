@@ -8,6 +8,6 @@ on:
   workflow_dispatch:
 jobs:
   docker:
-    uses: ./github/workflows/docker.yml
+    uses: .github/workflows/docker.yml
   docker-lite:
-    uses: ./github/workflows/docker.lite.yml
+    uses: .github/workflows/docker.lite.yml
