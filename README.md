@@ -9,20 +9,23 @@ Unofficial Docker image for https://github.com/stashapp/stash, with extras.
 
 # About
 
-The regular image replaces ffmpeg with jellyfin-ffmpeg and includes a startup script that parses and installs all required dependencies for your installed plugins/scrapers.
+This is intended to be a drop-in replacement for the original container image from the Stash maintainers. As such, the container is **not** root-less and uses the same configuration and storage paths.
 
-jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the current implementation in stash.
+The regular image replaces ffmpeg with jellyfin-ffmpeg. jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the regular ffmpeg binaries.
 
-There is a "lite" image that's based on Alpine linux based for a smaller, more secure container. It has no hardware acceleration support, but retains the dependency installer script.
+There is a *"lite"* image that's based on Alpine linux for a smaller, more secure container. It has no hardware acceleration support.
+
+Both images include an entrypoint script that parses and installs all required dependencies for your installed plugins/scrapers.
 
 # Tags
+The image originally started at `nerethos/stash-jellyfin-ffmpeg` and will continue to be available. For (mostly my own) convenience, the image is now also available from ghcr.io and `nerethos/stash` with the tags below.
 
-| Tag | Description |
-| --- | ----------- |
-| latest | HW acceleration + entrypoint script. Most up-to-date|
-| lite   | Entrypoint script (no HW acceleration, Alpine equivalent of latest) |
-| v*.*.* | latest, but pinned to a specific Stash version |
-| lite-v*.*.* | lite, but pinned to a specific Stash version |
+| Tag | Example | Features |
+| --- | ------- |--------- |
+| latest | `nerethos/stash:latest`<br>`ghcr.io/nerethos/stash:latest` | HW acceleration + entrypoint script. Most up-to-date|
+| lite   | `nerethos/stash:lite`<br>`ghcr.io/nerethos/stash:lite` | Entrypoint script (Alpine equivalent of latest) |
+| v*.*.* | `nerethos/stash:v0.27.2`<br>`ghcr.io/nerethos/stash:v0.27.2` | latest, but pinned to a specific Stash version |
+| lite-v*.*.* | `nerethos/stash:lite-v0.27.2`<br>`ghcr.io/nerethos/stash:lite-v0.27.2` | lite, but pinned to a specific Stash version |
 
 There are also git commit SHA tags for both image types.
 
@@ -45,7 +48,7 @@ AMD is currently not supported by Stash, however jellyfin-ffmpeg has full suppor
 # How To Install Plugin/Scraper Dependencies Automatically
 *Note: Your plugin must have a requirements file for this to work*
 
-1. Install plugins through the stash interface or manually
+1. Install plugins/scrapers through the stash interface or manually
 2. Restart the container
 3. Dependencies will be parsed and installed for all plugins/scrapers in the stash folder
 4. ????
@@ -58,7 +61,7 @@ You must modify the below compose file to pass your GPU through to the docker co
 ```yaml
 services:
   stash:
-    image: nerethos/stash-jellyfin-ffmpeg
+    image: nerethos/stash
     container_name: stash
     restart: unless-stopped
     ## the container's port must be the same with the STASH_PORT in the environment section
