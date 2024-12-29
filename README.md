@@ -15,8 +15,6 @@ jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardw
 
 There is a "lite" image that's based on Alpine linux based for a smaller, more secure container. It has no hardware acceleration support, but retains the dependency installer script.
 
-For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
-
 # Tags
 
 | Tag | Description |
@@ -29,6 +27,8 @@ For live transcoding using HW acceleration ensure that it's enabled in the Syste
 There are also git commit SHA tags for both image types.
 
 # Hardware Acceleration Setup
+
+For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
 
 ## Nvidia
 
