@@ -1,6 +1,35 @@
 # syntax=docker/dockerfile:1
 
-FROM alpine:3.21
+FROM --platform=$BUILDPLATFORM alpine:3.21 AS builder
+
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+RUN \
+  apk add --no-cache curl
+
+RUN \
+  set -ex && \
+  echo "TARGETPLATFORM=$TARGETPLATFORM" && \
+  echo "TARGETARCH=$TARGETARCH" && \
+  echo "TARGETVARIANT=$TARGETVARIANT" && \
+  case "${TARGETARCH}${TARGETVARIANT}" in \
+      "amd64") STASH_ARCH="stash-linux" ;; \
+      "armv7") STASH_ARCH="stash-linux-arm32v7" ;; \
+      "armv6") STASH_ARCH="stash-linux-arm32v6" ;; \
+      "arm64") STASH_ARCH="stash-linux-arm64v8" ;; \
+      *) echo "Unsupported architecture: ${TARGETARCH}${TARGETVARIANT}"; exit 1 ;; \
+  esac && \
+  if [ -z ${STASH_RELEASE+x} ]; then \
+    STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
+    | awk '/tag_name/{print $4;exit}' FS='[""]'); \
+  fi && \
+  curl -o \
+    /stash -L \
+    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/${STASH_ARCH}"
+
+FROM --platform=$BUILDPLATFORM alpine:3.21 AS runtime
 
 LABEL \
   org.opencontainers.image.title="Stash" \
@@ -18,15 +47,10 @@ ENV \
   PY_VENV="/pip-install/venv" \
   PATH="/pip-install/venv/bin:$PATH"
 
-ARG TARGETPLATFORM
-ARG TARGETARCH
-ARG TARGETVARIANT
-
-RUN \
+  RUN \
   apk add --no-cache \
     bash \
     ca-certificates \
-    curl \
     ffmpeg \
     python3 \
     py3-requests \
@@ -39,23 +63,13 @@ RUN \
     vips \
     vips-tools
 
-RUN \    
-  if [ -z ${STASH_RELEASE+x} ]; then \
-    STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
-    | awk '/tag_name/{print $4;exit}' FS='[""]'); \
-  fi && \
-  curl -o \
-    /usr/bin/stash -L \
-    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/stash-linux" && \
-  chmod +x /usr/bin/stash
-
 RUN \
   useradd -u 1000 -U -d /config -s /bin/false stash && \
   usermod -G users stash && \
   usermod -G video stash
 
-RUN \
-  apk del curl
+COPY --from=builder /stash /usr/local/bin/stash
+RUN chmod +x /usr/local/bin/stash
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
