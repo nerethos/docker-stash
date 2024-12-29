@@ -68,6 +68,7 @@ RUN \
   chmod +x /usr/bin/stash
 
 RUN \
+  mkdir -p /config && \
   useradd -u ${PUID} -U -d /config -s /bin/false stash && \
   usermod -G users stash && \
   usermod -G video stash && \
