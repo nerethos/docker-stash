@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM --platform=$BUILDPLATFORM ubuntu:24.04
+FROM ubuntu:24.04
 # labels
 LABEL \
   org.opencontainers.image.title="Stash" \
