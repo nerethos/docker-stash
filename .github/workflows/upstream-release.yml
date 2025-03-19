@@ -9,5 +9,15 @@ on:
 jobs:
   docker:
     uses: ./.github/workflows/docker.yml
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
   docker-lite:
     uses: ./.github/workflows/docker.lite.yml
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
