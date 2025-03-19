@@ -9,6 +9,7 @@ on:
 jobs:
   docker:
     uses: ./.github/workflows/docker.yml
+    secrets: inherit
     permissions:
       packages: write
       contents: read
@@ -16,6 +17,7 @@ jobs:
       id-token: write
   docker-lite:
     uses: ./.github/workflows/docker.lite.yml
+    secrets: inherit
     permissions:
       packages: write
       contents: read
