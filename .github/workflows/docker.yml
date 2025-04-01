@@ -150,7 +150,7 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:%s ${{ github.repository_owner }}/stash@sha256:%s ghcr.io/${{ github.repository }}@sha256:%s ' * * *)
+            $(printf '${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:%s ${{ github.repository_owner }}/stash@sha256:%s ghcr.io/${{ github.repository_owner }}/stash@sha256:%s ' * * *)
 
       - name: Inspect image
         run: |
