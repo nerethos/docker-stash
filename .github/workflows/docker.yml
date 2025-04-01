@@ -11,6 +11,8 @@ on:
 
 jobs:
   build:
+    outputs:
+      UPSTREAM_VERSION: ${{ steps.get_version.outputs.UPSTREAM_VERSION }}
     permissions:
       packages: write
       contents: read
@@ -47,9 +49,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Get Stash Version
+        id: get_version
         run: |
           VER=$(cat UPSTREAM_VERSION)
-          echo "UPSTREAM_VERSION=$VER" >> $GITHUB_ENV
+          echo "UPSTREAM_VERSION=$VER" >> $GITHUB_OUTPUT
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -102,6 +105,8 @@ jobs:
           retention-days: 1 
 
   merge:
+    env:
+      UPSTREAM_VERSION: ${{ needs.build.outputs.UPSTREAM_VERSION }}
     permissions:
       packages: write
       contents: read
