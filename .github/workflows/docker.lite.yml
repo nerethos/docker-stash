@@ -70,9 +70,10 @@ jobs:
             ghcr.io/${{ github.repository }}
           flavor: latest=false
           tags: |
-            type=raw,priority=997,lite-${{ env.UPSTREAM_VERSION }}
-            type=sha,priority=998,prefix=lite-${{ env.UPSTREAM_VERSION }}-
-            type=sha,priority=999,prefix=lite-,suffix=,format=short
+            type=raw,priority=996,lite-${{ env.UPSTREAM_VERSION }}
+            type=sha,priority=997,prefix=lite-${{ env.UPSTREAM_VERSION }}-
+            type=sha,priority=998,prefix=lite-,suffix=,format=short
+            type=raw,priority=999,lite
       
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -158,9 +159,10 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/stash
           flavor: latest=false
           tags: |
-            type=raw,priority=997,lite-${{ env.UPSTREAM_VERSION }}
-            type=sha,priority=998,prefix=lite-${{ env.UPSTREAM_VERSION }}-
-            type=sha,priority=999,prefix=lite-,suffix=,format=short
+            type=raw,priority=996,lite-${{ env.UPSTREAM_VERSION }}
+            type=sha,priority=997,prefix=lite-${{ env.UPSTREAM_VERSION }}-
+            type=sha,priority=998,prefix=lite-,suffix=,format=short
+            type=raw,priority=999,lite
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
