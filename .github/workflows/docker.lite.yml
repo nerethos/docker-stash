@@ -1,4 +1,4 @@
-name: Publish full image
+name: Publish lite image
 
 on:
   workflow_call:
