@@ -33,7 +33,6 @@ RUN \
     py3-requests-toolbelt \
     py3-lxml \
     py3-pip \
-    ruby \
     shadow \
     tzdata \
     vips \
