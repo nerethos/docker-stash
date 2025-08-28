@@ -56,7 +56,6 @@ RUN \
     python3 \
     python3-pip \
     python3-venv \
-    ruby \
     tzdata \
     wget \
     curl \

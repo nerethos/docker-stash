@@ -77,9 +77,6 @@ Installing dependencies...
     pip install -r $output_file
 fi
 
-gem install \
-    faraday
-
 PUID=${PUID:-911}
 PGID=${PGID:-911}
 if [ -z "${1}" ]; then
