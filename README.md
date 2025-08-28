@@ -13,7 +13,7 @@ This is intended to be a drop-in replacement for the original container image fr
 
 The regular image replaces ffmpeg with jellyfin-ffmpeg. jellyfin-ffmpeg contains multiple patches and optimisations to enable full hardware transcoding and is more performant than the regular ffmpeg binaries.
 
-There is a *"lite"* image that's based on Alpine linux for a smaller, more secure container. It has no hardware acceleration support.
+There is a *"lite"* image that's based on Alpine Linux for a smaller, more secure container. It has no hardware acceleration support.
 
 Both images include an entrypoint script that parses and installs all required dependencies for your installed plugins/scrapers.
 
