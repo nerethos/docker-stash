@@ -31,7 +31,7 @@ There are also git commit SHA tags for both image types.
 
 # Hardware Acceleration Setup
 
-For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. For general transcoding (generating previews etc.) you need to include the relevant ffmpeg args for your GPU. See the below example args for an Nvidia GPU.
+For live transcoding using HW acceleration ensure that it's enabled in the System>Transcoding settings **IT IS NO LONGER NECESSARY TO ADD ANY ARGS FOR LIVE TRANSCODING**. Generation tasks currently don't support hardware acceleration in stash.
 
 ## Nvidia
 
