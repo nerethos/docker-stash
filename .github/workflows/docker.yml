@@ -55,7 +55,7 @@ jobs:
             password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Get Stash Version
         id: get_version
