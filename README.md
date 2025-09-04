@@ -1,19 +1,19 @@
 # docker-stash
 
-[![Docker Hub pulls](https://img.shields.io/docker/pulls/nerethos/stash-jellyfin-ffmpeg.svg?label=Docker%20Hub%20pulls%20(legacy))](https://hub.docker.com/r/nerethos/stash-jellyfin-ffmpeg 'DockerHub')
+[![Docker Hub pulls](https://img.shields.io/docker/pulls/nerethos/stash-jellyfin-ffmpeg.svg?label=Hub%20pulls%20(legacy))](https://hub.docker.com/r/nerethos/stash-jellyfin-ffmpeg 'DockerHub')
 [![GHCR](https://img.shields.io/badge/GHCR-ghcr.io%2Fnerethos%2Fstash-blue?logo=github)](https://github.com/nerethos/docker-stash/pkgs/container/stash 'GitHub Container Registry')
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/nerethos/stash/latest)
-![Docker Image Version (tag)](https://img.shields.io/docker/v/nerethos/stash/latest)
-![GitHub Repo stars](https://img.shields.io/github/stars/nerethos/docker-stash)
+![Size](https://img.shields.io/docker/image-size/nerethos/stash/latest)
+![Version](https://img.shields.io/docker/v/nerethos/stash/latest)
+![Stars](https://img.shields.io/github/stars/nerethos/docker-stash)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Enhanced Docker images for [Stash](https://github.com/stashapp/stash) with hardware acceleration support and automatic plugin dependency management.
+Unofficial images for [Stash](https://github.com/stashapp/stash). Same layout as upstream, plus jellyfin-ffmpeg for broader HW accel and a helper to install plugin/scraper Python deps automatically.
 
-🚀 **Key Features:**
-- **Hardware Acceleration**: GPU transcoding support via jellyfin-ffmpeg
-- **Auto Dependencies**: Automatic plugin/scraper dependency installation
-- **Multiple Variants**: Full-featured and lightweight Alpine versions
-- **Drop-in Replacement**: Compatible with official Stash containers
+Main things you get:
+* Hardware acceleration (NVIDIA / Intel / VAAPI where supported)
+* Optional small Alpine variant (no HW accel)
+* Auto collection of scattered `requirements.txt` files into one install
+* Tags pinned to upstream releases or latest
 
 ## Table of Contents
 - [Quick Start](#quick-start)
@@ -29,7 +29,6 @@ Enhanced Docker images for [Stash](https://github.com/stashapp/stash) with hardw
 ## Quick Start
 
 ```bash
-# Basic setup with docker run
 docker run -d \
   --name stash \
   -p 9999:9999 \
@@ -39,11 +38,11 @@ docker run -d \
   -v ./cache:/cache \
   -v ./generated:/generated \
   nerethos/stash:latest
-
-# Access Stash at http://localhost:9999
 ```
 
-Or use the [docker-compose examples](#docker-compose-examples) below for a more complete setup.
+Then open: http://localhost:9999
+
+Need compose? Skip down to [examples](#docker-compose-examples).
 
 ## About
 
@@ -54,6 +53,14 @@ The regular image replaces ffmpeg with jellyfin-ffmpeg, which offers some improv
 There is a *"lite"* image that's based on Alpine Linux for a smaller, more secure container. It has no hardware acceleration support.
 
 Both images include an entrypoint script that parses and installs all required dependencies for your installed plugins/scrapers.
+
+### Environment Variables
+
+The examples in this README use environment variable syntax for user/group IDs:
+- `PUID=${PUID:-1000}` - Set to your user ID (defaults to 1000)
+- `PGID=${PGID:-1000}` - Set to your group ID (defaults to 1000)
+
+To find your IDs: `id $(whoami)`
 
 ## Available Tags
 The image originally started at `nerethos/stash-jellyfin-ffmpeg` and will continue to be available. For (mostly my own) convenience, the image is now also available from ghcr.io and `nerethos/stash` with the tags below.
@@ -69,76 +76,58 @@ There are also git commit SHA tags for both image types.
 
 ## Hardware Acceleration
 
-This image includes jellyfin-ffmpeg with full hardware acceleration support for transcoding.
+Bundled `jellyfin-ffmpeg` adds broader GPU support than stock ffmpeg.
 
-### Setup Instructions
+### What to do
+1. Map your GPU into the container (see compose snippets below).
+2. In Stash: Settings → System → Transcoding → enable HW acceleration.
+3. Usually no custom args needed; override only if you know why.
 
-1. **Enable in Stash**: Go to Settings > System > Transcoding and enable hardware acceleration
-2. **GPU Access**: Ensure your Docker setup has access to your GPU (see examples below)
+### Platforms
+| GPU | Status | Tech | Note |
+|-----|--------|------|------|
+| NVIDIA | Full | NVENC/NVDEC, CUDA | Encode + decode |
+| Intel | Full | QSV, VAAPI | Encode + decode |
+| AMD | Partial | VAAPI | Not currently supported by Stash, but supported by jellyfin-ffmpeg |
 
-### Supported Hardware
-
-| GPU Type | Support Level | Notes |
-|----------|---------------|--------|
-| **NVIDIA** | ✅ Full Support | NVENC/NVDEC for encode/decode |
-| **Intel** | ✅ Full Support | Quick Sync Video (QSV) |
-| **AMD** | ⚠️ Limited | Not (currently) supported by Stash |
-
-### NVIDIA Example
+### Examples
+NVIDIA (compose):
 ```yaml
-services:
-  stash:
-    # ... other config
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+deploy:
+  resources:
+    reservations:
+      devices:
+        - driver: nvidia
+          count: 1
+          capabilities: [gpu]
+```
+Intel / VAAPI:
+```yaml
+devices:
+  - /dev/dri:/dev/dri
 ```
 
-### Intel Example
-```yaml
-services:
-  stash:
-    # ... other config
-    devices:
-      - /dev/dri:/dev/dri
+### Verify
+```bash
+docker exec stash /usr/lib/jellyfin-ffmpeg/ffmpeg -hwaccels
+docker exec stash vainfo   # VAAPI details (if installed on host)
 ```
 
-For more details, see the [Jellyfin hardware acceleration guide](https://jellyfin.org/docs/general/administration/hardware-acceleration/).
+More background: Jellyfin’s HW accel docs: https://jellyfin.org/docs/general/administration/hardware-acceleration/
 
 ## Plugin Dependencies
 
-This image automatically installs Python dependencies for your Stash plugins and scrapers.
+On startup the entrypoint scans plugin & scraper folders for every `requirements.txt`, merges them, pins/deduplicates, then installs into a venv.
 
-### How It Works
+What you need: just make sure each plugin that needs Python deps ships a `requirements.txt`.
 
-1. **Detection**: The entrypoint script scans your plugins and scrapers directories
-2. **Parsing**: Finds all `requirements.txt` files
-3. **Installation**: Combines and installs dependencies in a virtual environment
-4. **Automatic**: Runs on every container start
+Adding a new plugin? Restart the container so it rescans.
 
-### Requirements
-
-- Your plugins/scrapers must include a `requirements.txt` file
-- Dependencies are installed using pip in a Python virtual environment
-- Virtual environment is located at `/pip-install/venv` and added to PATH
-
-### Manual Installation
-
-If you need to install additional packages:
-
+Manual tweaks:
 ```bash
-# Enter the container
 docker exec -it stash bash
-
-# Activate the virtual environment
 source /pip-install/venv/bin/activate
-
-# Install packages
-pip install your-package-name
+pip install extra-package
 ```
 
 ## Docker Compose Examples
@@ -154,8 +143,8 @@ services:
     ports:
       - "9999:9999"
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - STASH_STASH=/data/
       - STASH_GENERATED=/generated/
       - STASH_METADATA=/metadata/
@@ -179,8 +168,8 @@ services:
     ports:
       - "9999:9999"
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - STASH_STASH=/data/
       - STASH_GENERATED=/generated/
       - STASH_METADATA=/metadata/
@@ -213,8 +202,8 @@ services:
     ports:
       - "9999:9999"
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - STASH_STASH=/data/
       - STASH_GENERATED=/generated/
       - STASH_METADATA=/metadata/
@@ -240,8 +229,8 @@ services:
     ports:
       - "9999:9999"
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - STASH_STASH=/data/
       - STASH_GENERATED=/generated/
       - STASH_METADATA=/metadata/
@@ -256,43 +245,32 @@ services:
 
 ## Troubleshooting
 
-### Common Issues
+**Permissions**
 
-#### Permission Problems
+Ensure host permissions are correct for the mounted volumes.
+
+**GPU not detected**
+* NVIDIA: driver + runtime present? (`nvidia-smi` on host)
+* Intel/AMD: is `/dev/dri` mapped and readable?
+
+**Deps not installing**
+* Confirm at least one `requirements.txt`
+* Restart container after adding plugins
+* Inspect `docker logs stash`
+
+**Check venv contents**
 ```bash
-# Fix ownership of mounted volumes
-sudo chown -R 1000:1000 ./config ./data ./metadata ./cache ./generated
+docker exec stash ls -1 /pip-install/venv/lib*/python*/site-packages | head
 ```
 
-#### GPU Not Detected
-- Ensure Docker has GPU support installed
-- Verify `/dev/dri` permissions (Intel)
-
-#### Plugin Dependencies Not Installing
-- Check that your plugins have `requirements.txt` files
-- Restart the container after adding new plugins
-- Check container logs: `docker logs stash`
-- Verify virtual environment: `docker exec stash ls -la /pip-install/venv/`
-
-### Getting Help
-
-- [Stash Documentation](https://docs.stashapp.cc/)
-- [Stash Discord](https://discord.gg/2TsNFKt)
-- [Report Issues](https://github.com/nerethos/docker-stash/issues)
-- [Stash GitHub Discussions](https://github.com/stashapp/stash/discussions)
+Links: [Docs](https://docs.stashapp.cc/) • [Discord](https://discord.gg/2TsNFKt) • [Issues](https://github.com/nerethos/docker-stash/issues)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+PRs and small fixes welcome. Open an issue first for bigger changes.
 
 ## License
 
-This Docker project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Code in this repo (Dockerfiles, scripts, workflow glue) is MIT – see [LICENSE](LICENSE).
 
-**Important**: This MIT license applies to the Docker packaging, build scripts, configuration files, and related automation created for this project. The Stash software itself remains licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](https://github.com/stashapp/stash/blob/develop/LICENSE) as maintained by the original developers.
-
-When using these Docker images, you must comply with both:
-- The MIT license for the Docker packaging and scripts (this repository)
-- The AGPLv3 license for the Stash software (when applicable)
-
-For the complete Stash license terms, please refer to the [upstream Stash repository](https://github.com/stashapp/stash/blob/develop/LICENSE).
+The bundled Stash binary remains AGPLv3 (upstream project). Using the image means both apply: MIT for what’s here, AGPLv3 for Stash itself. Upstream license: https://github.com/stashapp/stash/blob/develop/LICENSE
