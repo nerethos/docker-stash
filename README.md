@@ -101,3 +101,15 @@ services:
       ## Where to store generated content (screenshots,previews,transcodes,sprites)
       - ./generated:/generated
 ```
+
+# License
+
+This Docker project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Important**: This MIT license applies to the Docker packaging, build scripts, configuration files, and related automation created for this project. The Stash software itself remains licensed under the [GNU Affero General Public License v3.0 (AGPLv3)](https://github.com/stashapp/stash/blob/develop/LICENSE) as maintained by the original developers.
+
+When using these Docker images, you must comply with both:
+- The MIT license for the Docker packaging and scripts (this repository)
+- The AGPLv3 license for the Stash software (when applicable)
+
+For the complete Stash license terms, please refer to the [upstream Stash repository](https://github.com/stashapp/stash/blob/develop/LICENSE).
