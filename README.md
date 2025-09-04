@@ -1,6 +1,6 @@
 # docker-stash
 
-[![Docker Hub pulls](https://img.shields.io/docker/pulls/nerethos/stash-jellyfin-ffmpeg.svg?label=Docker%20Hub%20pulls%20(legacy))](https://hub.docker.com/r/nerethos/stash-jellyfin-ffmpeg 'DockerHub Legacy')
+[![Docker Hub pulls](https://img.shields.io/docker/pulls/nerethos/stash-jellyfin-ffmpeg.svg?label=Docker%20Hub%20pulls%20(legacy))](https://hub.docker.com/r/nerethos/stash-jellyfin-ffmpeg 'DockerHub')
 [![GHCR](https://img.shields.io/badge/GHCR-ghcr.io%2Fnerethos%2Fstash-blue?logo=github)](https://github.com/nerethos/docker-stash/pkgs/container/stash 'GitHub Container Registry')
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/nerethos/stash/latest)
 ![Docker Image Version (tag)](https://img.shields.io/docker/v/nerethos/stash/latest)
