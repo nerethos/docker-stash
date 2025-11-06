@@ -10,7 +10,7 @@ on:
       - Dockerfile.lite
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: docker-lite-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

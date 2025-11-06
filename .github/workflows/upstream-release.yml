@@ -7,10 +7,6 @@ on:
       - 'UPSTREAM_VERSION'
   workflow_dispatch:
 
-concurrency:
-  group: upstream-release-${{ github.ref }}
-  cancel-in-progress: true 
-
 jobs:
   docker:
     uses: ./.github/workflows/docker.yml

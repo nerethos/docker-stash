@@ -10,7 +10,7 @@ on:
       - Dockerfile
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: docker-full-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
