@@ -2,7 +2,29 @@ name: Publish full image
 
 on:
   workflow_call:
+    inputs:
+      variant:
+        description: 'Build variant (full or lite)'
+        required: false
+        type: string
+        default: 'full'
+      skip_merge:
+        description: 'Skip merge job (for use with upstream-release)'
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      variant:
+        description: 'Build variant (full or lite)'
+        required: false
+        type: string
+        default: 'full'
+      skip_merge:
+        description: 'Skip merge job (for use with upstream-release)'
+        required: false
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -109,12 +131,13 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ env.PLATFORM_PAIR }}
+          name: digests-${{ inputs.variant || 'full' }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
           retention-days: 1 
 
   merge:
+    if: ${{ !inputs.skip_merge }}
     env:
       UPSTREAM_VERSION: ${{ needs.build.outputs.UPSTREAM_VERSION }}
     permissions:
@@ -130,7 +153,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           path: ${{ runner.temp }}/digests
-          pattern: digests-*
+          pattern: digests-${{ inputs.variant || 'full' }}-*
           merge-multiple: true
 
       - name: Login to Docker Hub
