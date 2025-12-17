@@ -50,11 +50,18 @@ jobs:
           echo "UPSTREAM_VERSION=$VER" >> $GITHUB_OUTPUT
           echo "UPSTREAM_VERSION=$VER" >> $GITHUB_ENV
 
-      - name: Download all digests
+      - name: Download full digests
         uses: actions/download-artifact@v5
         with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-*
+          path: ${{ runner.temp }}/digests-full
+          pattern: digests-full-*
+          merge-multiple: true
+
+      - name: Download lite digests
+        uses: actions/download-artifact@v5
+        with:
+          path: ${{ runner.temp }}/digests-lite
+          pattern: digests-lite-*
           merge-multiple: true
 
       - name: Login to Docker Hub
@@ -102,44 +109,21 @@ jobs:
             type=sha,priority=998,prefix=lite-,suffix=,format=short
             type=raw,priority=999,lite
 
-      - name: Create and push manifests
-        working-directory: ${{ runner.temp }}/digests
+      - name: Create and push full manifest
+        working-directory: ${{ runner.temp }}/digests-full
         run: |
-          # Get full variant digests (amd64 and arm64 only)
-          FULL_DIGESTS=$(ls -1 | grep '^[0-9a-f]\{64\}$' | head -2)
-          
-          # Get lite variant digests (all 4 platforms)
-          LITE_DIGESTS=$(ls -1 | grep '^[0-9a-f]\{64\}$' | tail -4)
-          
-          # Create full image tags
-          FULL_TAGS=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON_META_FULL")
-          
-          # Create lite image tags
-          LITE_TAGS=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON_META_LITE")
-          
-          # Build full image references
-          FULL_REFERENCES=""
-          for digest in $FULL_DIGESTS; do
-            FULL_REFERENCES="${FULL_REFERENCES} ${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:${digest}"
-            FULL_REFERENCES="${FULL_REFERENCES} ${{ github.repository_owner }}/stash@sha256:${digest}"
-            FULL_REFERENCES="${FULL_REFERENCES} ghcr.io/${{ github.repository_owner }}/stash@sha256:${digest}"
-          done
-          
-          # Build lite image references
-          LITE_REFERENCES=""
-          for digest in $LITE_DIGESTS; do
-            LITE_REFERENCES="${LITE_REFERENCES} ${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:${digest}"
-            LITE_REFERENCES="${LITE_REFERENCES} ${{ github.repository_owner }}/stash@sha256:${digest}"
-            LITE_REFERENCES="${LITE_REFERENCES} ghcr.io/${{ github.repository_owner }}/stash@sha256:${digest}"
-          done
-          
-          # Create and push full manifest
-          echo "Creating full image manifest..."
-          docker buildx imagetools create ${FULL_TAGS} ${FULL_REFERENCES}
-          
-          # Create and push lite manifest
-          echo "Creating lite image manifest..."
-          docker buildx imagetools create ${LITE_TAGS} ${LITE_REFERENCES}
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:%s ' *)
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta_full.outputs.json }}
+
+      - name: Create and push lite manifest
+        working-directory: ${{ runner.temp }}/digests-lite
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:%s ' *)
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta_lite.outputs.json }}
 
       - name: Inspect images
         run: |
