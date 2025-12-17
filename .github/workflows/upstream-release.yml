@@ -88,11 +88,12 @@ jobs:
             ${{ github.repository_owner }}/stash-jellyfin-ffmpeg
             ${{ github.repository_owner }}/stash
             ghcr.io/${{ github.repository_owner }}/stash
-          flavor: latest=true
+          flavor: latest=false
           tags: |
-            type=raw,priority=997,${{ steps.get_version.outputs.UPSTREAM_VERSION }}
             type=sha,priority=998,prefix=${{ steps.get_version.outputs.UPSTREAM_VERSION }}-
             type=sha,priority=999,prefix=,suffix=,format=short
+            type=raw,priority=1000,${{ steps.get_version.outputs.UPSTREAM_VERSION }}
+            type=raw,priority=1001,latest
 
       - name: Create lite image manifest
         id: meta_lite
@@ -104,10 +105,10 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/stash
           flavor: latest=false
           tags: |
-            type=raw,priority=996,lite-${{ steps.get_version.outputs.UPSTREAM_VERSION }}
             type=sha,priority=997,prefix=lite-${{ steps.get_version.outputs.UPSTREAM_VERSION }}-
             type=sha,priority=998,prefix=lite-,suffix=,format=short
-            type=raw,priority=999,lite
+            type=raw,priority=999,lite-${{ steps.get_version.outputs.UPSTREAM_VERSION }}
+            type=raw,priority=1000,lite
 
       - name: Create and push full manifest
         working-directory: ${{ runner.temp }}/digests-full
