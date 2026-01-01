@@ -51,14 +51,14 @@ jobs:
           echo "UPSTREAM_VERSION=$VER" >> $GITHUB_ENV
 
       - name: Download full digests
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           path: ${{ runner.temp }}/digests-full
           pattern: digests-full-*
           merge-multiple: true
 
       - name: Download lite digests
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           path: ${{ runner.temp }}/digests-lite
           pattern: digests-lite-*
