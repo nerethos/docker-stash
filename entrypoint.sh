@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -euo pipefail
 # Path to the config file
 config_file="/root/.stash/config.yml"
 
