@@ -3,6 +3,12 @@ set -euo pipefail
 # Path to the config file
 config_file="/root/.stash/config.yml"
 
+if [ ! -f "$config_file" ]; then
+    echo "Error: Config file not found at $config_file" >&2
+    echo "This appears to be a fresh install. Please run stash once to generate the config file." >&2
+    exit 1
+fi
+
 # Extract the plugins_path from the config file
 plugins_path=$(grep -E '^plugins_path:' "$config_file" | sed 's/plugins_path:[ ]*//')
 
