@@ -141,7 +141,7 @@ jobs:
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: digests-${{ inputs.variant || 'lite' }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
