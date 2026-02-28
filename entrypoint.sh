@@ -85,7 +85,7 @@ fi
 
 PUID=${PUID:-911}
 PGID=${PGID:-911}
-if [ -z "${1}" ]; then
+if [ -z "${1:-}" ]; then
     set -- "stash"
 fi
 echo '
