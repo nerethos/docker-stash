@@ -82,7 +82,7 @@ jobs:
 
       - name: Create full image manifest
         id: meta_full
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ github.repository_owner }}/stash-jellyfin-ffmpeg
@@ -96,7 +96,7 @@ jobs:
 
       - name: Create lite image manifest
         id: meta_lite
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ github.repository_owner }}/stash-jellyfin-ffmpeg
