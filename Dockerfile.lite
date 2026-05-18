@@ -28,6 +28,7 @@ RUN \
     ca-certificates \
     curl \
     ffmpeg \
+    gosu \
     python3 \
     py3-requests \
     py3-requests-toolbelt \
@@ -61,8 +62,8 @@ RUN \
 
 RUN \
   useradd -u 1000 -U -d /config -s /bin/false stash && \
-  usermod -G users stash && \
-  usermod -G video stash
+  usermod -G users,video stash && \
+  chmod 711 /root
 
 RUN \
   apk del curl
@@ -70,4 +71,4 @@ RUN \
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
 EXPOSE 9999
-CMD ["entrypoint.sh"]
+ENTRYPOINT ["entrypoint.sh"]
