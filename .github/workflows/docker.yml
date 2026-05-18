@@ -297,9 +297,13 @@ jobs:
       - name: Create and push full manifest
         working-directory: ${{ runner.temp }}/digests-full
         run: |
+          set -euo pipefail
+          shopt -s nullglob
+          digests=(*)
+          [[ ${#digests[@]} -gt 0 ]] || { echo "No digest files found" >&2; exit 1; }
           TAGS=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
           REFS=""
-          for digest in *; do
+          for digest in "${digests[@]}"; do
             REFS="${REFS} ${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:${digest}"
             REFS="${REFS} ${{ github.repository_owner }}/stash@sha256:${digest}"
             REFS="${REFS} ghcr.io/${{ github.repository_owner }}/stash@sha256:${digest}"
@@ -311,9 +315,13 @@ jobs:
       - name: Create and push lite manifest
         working-directory: ${{ runner.temp }}/digests-lite
         run: |
+          set -euo pipefail
+          shopt -s nullglob
+          digests=(*)
+          [[ ${#digests[@]} -gt 0 ]] || { echo "No digest files found" >&2; exit 1; }
           TAGS=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
           REFS=""
-          for digest in *; do
+          for digest in "${digests[@]}"; do
             REFS="${REFS} ${{ github.repository_owner }}/stash-jellyfin-ffmpeg@sha256:${digest}"
             REFS="${REFS} ${{ github.repository_owner }}/stash@sha256:${digest}"
             REFS="${REFS} ghcr.io/${{ github.repository_owner }}/stash@sha256:${digest}"
