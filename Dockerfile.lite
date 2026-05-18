@@ -21,6 +21,7 @@ ENV \
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETVARIANT
+ARG STASH_RELEASE
 
 RUN \
   apk add --no-cache \
@@ -51,13 +52,13 @@ RUN \
       "arm64") STASH_ARCH="stash-linux-arm64v8" ;; \
       *) echo "Unsupported architecture: ${TARGETARCH}${TARGETVARIANT}"; exit 1 ;; \
   esac && \
-  if [ -z ${STASH_RELEASE+x} ]; then \
-    STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
+  _release="${STASH_RELEASE:-}" && \
+  if [ -z "$_release" ]; then \
+    _release=$(curl -fsSL "https://api.github.com/repos/stashapp/stash/releases/latest" \
     | awk '/tag_name/{print $4;exit}' FS='[""]'); \
   fi && \
-  curl -o \
-    /usr/bin/stash -L \
-    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/${STASH_ARCH}" && \
+  curl -fsSL -o /usr/bin/stash \
+    "https://github.com/stashapp/stash/releases/download/${_release}/${STASH_ARCH}" && \
   chmod +x /usr/bin/stash && \
   apk del curl
 
