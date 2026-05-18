@@ -58,15 +58,13 @@ RUN \
   curl -o \
     /usr/bin/stash -L \
     "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/${STASH_ARCH}" && \
-  chmod +x /usr/bin/stash
+  chmod +x /usr/bin/stash && \
+  apk del curl
 
 RUN \
   useradd -u 1000 -U -d /config -s /bin/false stash && \
   usermod -G users,video stash && \
   chmod 711 /root
-
-RUN \
-  apk del curl
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
