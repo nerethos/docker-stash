@@ -52,14 +52,12 @@ RUN \
     --no-install-suggests \
     ca-certificates \
     curl \
-    gnupg \
     gosu \
     libvips-tools \
     python3 \
     python3-pip \
     python3-venv \
-    tzdata \
-    wget && \
+    tzdata && \
     rm -rf \
       /tmp/* \
       /var/lib/apt/lists/* \
@@ -67,11 +65,17 @@ RUN \
       /var/log/*
 
 RUN \
-  wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - && \
-  echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends gpg && \
+  curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | \
+    gpg --dearmor -o /usr/share/keyrings/jellyfin.gpg && \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/$(awk -F'=' '/^ID=/{print $NF}' /etc/os-release) $(awk -F'=' '/^VERSION_CODENAME=/{print $NF}' /etc/os-release) main" \
+    > /etc/apt/sources.list.d/jellyfin.list && \
   apt-get update && \
   apt-get install --no-install-recommends --no-install-suggests -y \
     jellyfin-ffmpeg7 && \
+  apt-get purge -y gpg && \
+  apt-get autoremove -y && \
   rm -rf \
     /tmp/* \
     /var/lib/apt/lists/* \
@@ -105,8 +109,6 @@ RUN \
   chmod 711 /root
 
 RUN \
-  apt-get purge -qq wget gnupg curl && \
-  apt-get autoremove -qq && \
   apt-get clean -qq && \
   rm -rf \
     /tmp/* \
