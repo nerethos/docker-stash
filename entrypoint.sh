@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 # Path to the config file
-config_file="/root/.stash/config.yml"
+config_file="${STASH_CONFIG_FILE:-/root/.stash/config.yml}"
 
 if [ ! -f "$config_file" ]; then
     echo "Error: Config file not found at $config_file" >&2
@@ -10,10 +10,10 @@ if [ ! -f "$config_file" ]; then
 fi
 
 # Extract the plugins_path from the config file
-plugins_path=$(grep -E '^plugins_path:' "$config_file" | sed 's/plugins_path:[ ]*//')
+plugins_path=$(grep -E '^plugins_path:' "$config_file" | sed 's/plugins_path:[ ]*//' || true)
 
 # Extract the scrapers_path from the config file
-scrapers_path=$(grep -E '^scrapers_path:' "$config_file" | sed 's/scrapers_path:[ ]*//')
+scrapers_path=$(grep -E '^scrapers_path:' "$config_file" | sed 's/scrapers_path:[ ]*//' || true)
 
 # Initialize an empty variable to store the contents
 all_requirements=""
@@ -59,8 +59,9 @@ else
     mkdir -p "$(dirname "$output_file")"
 
     # Create a virtual environment and activate it
-    python3 -m venv ${PY_VENV}
-    source ${PY_VENV}/bin/activate
+    python3 -m venv "${PY_VENV}"
+    # shellcheck source=/dev/null
+    source "${PY_VENV}/bin/activate"
 
     # Install pip-tools
     pip install pip-tools
