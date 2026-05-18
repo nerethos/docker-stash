@@ -30,15 +30,12 @@ ENV \
 RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
 
 RUN \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get update && \
   apt-get install -y \
     apt-utils \
     locales && \
-    rm -rf \
-      /tmp/* \
-      /var/lib/apt/lists/* \
-      /var/tmp/* \
-      /var/log/* && \
   sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
   locale-gen
 ENV LANG=en_US.UTF-8  
@@ -46,6 +43,8 @@ ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8    
 
 RUN \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get update && \
   apt-get install -y \
     --no-install-recommends \
@@ -57,14 +56,11 @@ RUN \
     python3 \
     python3-pip \
     python3-venv \
-    tzdata && \
-    rm -rf \
-      /tmp/* \
-      /var/lib/apt/lists/* \
-      /var/tmp/* \
-      /var/log/*
+    tzdata
 
 RUN \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get update && \
   apt-get install -y --no-install-recommends gpg && \
   curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | \
@@ -75,12 +71,7 @@ RUN \
   apt-get install --no-install-recommends --no-install-suggests -y \
     jellyfin-ffmpeg7 && \
   apt-get purge -y gpg && \
-  apt-get autoremove -y && \
-  rm -rf \
-    /tmp/* \
-    /var/lib/apt/lists/* \
-    /var/tmp/* \
-    /var/log/*
+  apt-get autoremove -y
 
 RUN \
   set -ex && \
@@ -107,14 +98,6 @@ RUN \
   useradd -u 1000 -U -d /config -s /bin/false stash && \
   usermod -G users,video stash && \
   chmod 711 /root
-
-RUN \
-  apt-get clean -qq && \
-  rm -rf \
-    /tmp/* \
-    /var/lib/apt/lists/* \
-    /var/tmp/* \
-    /var/log/*
 
 ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
 
