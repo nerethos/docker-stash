@@ -27,7 +27,6 @@ RUN \
   apk add --no-cache \
     bash \
     ca-certificates \
-    curl \
     ffmpeg \
     gosu \
     python3 \
@@ -45,6 +44,7 @@ RUN \
   echo "TARGETPLATFORM=$TARGETPLATFORM" && \
   echo "TARGETARCH=$TARGETARCH" && \
   echo "TARGETVARIANT=$TARGETVARIANT" && \
+  apk add --no-cache --virtual .build-deps curl && \
   case "${TARGETARCH}${TARGETVARIANT}" in \
       "amd64") STASH_ARCH="stash-linux" ;; \
       "armv7") STASH_ARCH="stash-linux-arm32v7" ;; \
@@ -60,7 +60,7 @@ RUN \
   curl -fsSL -o /usr/bin/stash \
     "https://github.com/stashapp/stash/releases/download/${_release}/${STASH_ARCH}" && \
   chmod +x /usr/bin/stash && \
-  apk del curl
+  apk del .build-deps
 
 RUN \
   useradd -u 1000 -U -d /config -s /bin/false stash && \
