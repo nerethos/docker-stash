@@ -4,7 +4,7 @@ VERSION := $(shell cat UPSTREAM_VERSION)
 .PHONY: help build build-lite test test-lite push push-lite
 
 help: ## Show available targets
-	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z_-]+:.*## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 build: ## Build the full image tagged :latest and :<version>
 	docker build --build-arg STASH_RELEASE=$(VERSION) \
