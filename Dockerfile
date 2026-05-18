@@ -50,17 +50,16 @@ RUN \
   apt-get install -y \
     --no-install-recommends \
     --no-install-suggests \
-    gnupg \
     ca-certificates \
+    curl \
+    gnupg \
     gosu \
     libvips-tools \
     python3 \
     python3-pip \
     python3-venv \
     tzdata \
-    wget \
-    curl \
-    yq && \
+    wget && \
     rm -rf \
       /tmp/* \
       /var/lib/apt/lists/* \
@@ -106,7 +105,7 @@ RUN \
   chmod 711 /root
 
 RUN \
-  apt-get purge -qq wget gnupg curl apt-utils && \
+  apt-get purge -qq wget gnupg curl && \
   apt-get autoremove -qq && \
   apt-get clean -qq && \
   rm -rf \
