@@ -37,7 +37,6 @@ RUN \
     --no-install-recommends \
     --no-install-suggests \
     ca-certificates \
-    curl \
     gosu \
     libvips-tools \
     locales \
@@ -55,7 +54,7 @@ RUN \
   --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get update && \
-  apt-get install -y --no-install-recommends gpg && \
+  apt-get install -y --no-install-recommends curl gpg && \
   curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | \
     gpg --dearmor -o /usr/share/keyrings/jellyfin.gpg && \
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/$(awk -F'=' '/^ID=/{print $NF}' /etc/os-release) $(awk -F'=' '/^VERSION_CODENAME=/{print $NF}' /etc/os-release) main" \
@@ -63,14 +62,17 @@ RUN \
   apt-get update && \
   apt-get install --no-install-recommends --no-install-suggests -y \
     jellyfin-ffmpeg7 && \
-  apt-get purge -y gpg && \
+  apt-get purge -y curl gpg && \
   apt-get autoremove -y
 
 RUN \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
   set -ex && \
   echo "TARGETPLATFORM=$TARGETPLATFORM" && \
   echo "TARGETARCH=$TARGETARCH" && \
   echo "TARGETVARIANT=$TARGETVARIANT" && \
+  apt-get update && apt-get install -y --no-install-recommends curl && \
   case "${TARGETARCH}${TARGETVARIANT}" in \
       "amd64") STASH_ARCH="stash-linux" ;; \
       "armv7") STASH_ARCH="stash-linux-arm32v7" ;; \
@@ -85,7 +87,9 @@ RUN \
   fi && \
   curl -fsSL -o /usr/bin/stash \
     "https://github.com/stashapp/stash/releases/download/${_release}/${STASH_ARCH}" && \
-  chmod +x /usr/bin/stash
+  chmod +x /usr/bin/stash && \
+  apt-get purge -y curl && \
+  apt-get autoremove -y
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
