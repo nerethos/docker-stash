@@ -1,10 +1,14 @@
 IMAGE   := nerethos/stash-jellyfin-ffmpeg
 VERSION := $(shell cat UPSTREAM_VERSION)
 
-.PHONY: help build build-lite test test-lite push push-lite
+.PHONY: help build build-lite test test-lite test-scripts push push-lite
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z_-]+:.*## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+test-scripts: ## Run shellcheck and BATS tests
+	shellcheck entrypoint.sh
+	bats test/bats/
 
 build: ## Build the full image tagged :latest and :<version>
 	docker build --build-arg STASH_RELEASE=$(VERSION) \
