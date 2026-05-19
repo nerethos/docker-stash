@@ -249,6 +249,8 @@ services:
 
 Ensure host permissions are correct for the mounted volumes.
 
+If you set `PUID`/`PGID`, they must match the UID/GID that owns the host bind mounts — otherwise the in-container `stash` user can't read/write its config and Stash fails with `permission denied` on `config.yml`. Typical host UIDs: TrueNAS Scale apps (568), Unraid (99), Synology (1024), most Linux desktops/servers (1000). The entrypoint warns at startup if PUID and the bind-mount owner don't line up.
+
 **GPU not detected**
 * NVIDIA: driver + runtime present? (`nvidia-smi` on host)
 * Intel/AMD: is `/dev/dri` mapped and readable?

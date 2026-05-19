@@ -118,6 +118,15 @@ if [ -n "${PUID:-}" ] || [ -n "${PGID:-}" ]; then
     groupmod -o -g "$PGID" stash
     usermod -o -u "$PUID" stash
     echo "UID:${PUID} GID:${PGID}"
+
+    # Warn if PUID doesn't match the actual owner of the config dir
+    actual_uid=$(stat -c '%u' /root/.stash 2>/dev/null || echo "")
+    if [ -n "$actual_uid" ] && [ "$actual_uid" != "$PUID" ]; then
+        echo "Warning: /root/.stash is owned by UID ${actual_uid}, but PUID=${PUID}."
+        echo "Stash may fail with 'permission denied'. Either set PUID=${actual_uid} (and PGID to match),"
+        echo "or chown the host bind mount to ${PUID}:${PGID} before starting the container."
+    fi
+
     exec gosu stash "$@"
 fi
 exec "$@"
