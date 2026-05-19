@@ -7,6 +7,8 @@ on:
     paths:
       - Dockerfile
       - Dockerfile.lite
+      - entrypoint.sh
+      - UPSTREAM_VERSION
       - .github/workflows/docker.yml
       - .github/workflows/docker.pr.yml
 
