@@ -1,0 +1,243 @@
+name: PR image build
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - Dockerfile.lite
+      - entrypoint.sh
+      - UPSTREAM_VERSION
+      - .github/workflows/docker.yml
+      - .github/workflows/docker.pr.yml
+
+concurrency:
+  group: docker-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-full:
+    outputs:
+      UPSTREAM_VERSION: ${{ steps.get_version.outputs.UPSTREAM_VERSION }}
+    permissions:
+      packages: write
+      contents: read
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Get Stash Version
+        id: get_version
+        run: |
+          VER=$(cat UPSTREAM_VERSION)
+          echo "UPSTREAM_VERSION=$VER" >> $GITHUB_OUTPUT
+          echo "UPSTREAM_VERSION=$VER" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          platforms: ${{ matrix.platform }}
+          tags: ghcr.io/${{ github.repository_owner }}/stash
+          build-args: |
+            STASH_RELEASE=${{ env.UPSTREAM_VERSION }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}-full
+          cache-to: type=gha,scope=${{ env.PLATFORM_PAIR }}-full,mode=max
+          file: Dockerfile
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests-full
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests-full/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-digests-full-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests-full/*
+          if-no-files-found: error
+          retention-days: 1
+
+  build-lite:
+    outputs:
+      UPSTREAM_VERSION: ${{ steps.get_version.outputs.UPSTREAM_VERSION }}
+    permissions:
+      packages: write
+      contents: read
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+            qemu: false
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            qemu: false
+          - platform: linux/arm/v7
+            runner: ubuntu-24.04-arm
+            qemu: true
+          - platform: linux/arm/v6
+            runner: ubuntu-24.04-arm
+            qemu: true
+
+    steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Get Stash Version
+        id: get_version
+        run: |
+          VER=$(cat UPSTREAM_VERSION)
+          echo "UPSTREAM_VERSION=$VER" >> $GITHUB_OUTPUT
+          echo "UPSTREAM_VERSION=$VER" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        if: matrix.qemu
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          platforms: ${{ matrix.platform }}
+          tags: ghcr.io/${{ github.repository_owner }}/stash
+          build-args: |
+            STASH_RELEASE=${{ env.UPSTREAM_VERSION }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}-lite
+          cache-to: type=gha,scope=${{ env.PLATFORM_PAIR }}-lite,mode=max
+          file: Dockerfile.lite
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests-lite
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests-lite/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-digests-lite-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests-lite/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    env:
+      UPSTREAM_VERSION: ${{ needs.build-full.outputs.UPSTREAM_VERSION }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    permissions:
+      packages: write
+      contents: read
+    runs-on: ubuntu-latest
+    needs:
+      - build-full
+      - build-lite
+    steps:
+      - name: Download full digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests-full
+          pattern: pr-digests-full-*
+          merge-multiple: true
+
+      - name: Download lite digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests-lite
+          pattern: pr-digests-lite-*
+          merge-multiple: true
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Create and push full manifest
+        working-directory: ${{ runner.temp }}/digests-full
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          digests=(*)
+          [[ ${#digests[@]} -gt 0 ]] || { echo "No digest files found" >&2; exit 1; }
+          REFS=""
+          for digest in "${digests[@]}"; do
+            REFS="${REFS} ghcr.io/${{ github.repository_owner }}/stash@sha256:${digest}"
+          done
+          docker buildx imagetools create \
+            -t ghcr.io/${{ github.repository_owner }}/stash:pr-${PR_NUMBER} \
+            ${REFS}
+
+      - name: Create and push lite manifest
+        working-directory: ${{ runner.temp }}/digests-lite
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          digests=(*)
+          [[ ${#digests[@]} -gt 0 ]] || { echo "No digest files found" >&2; exit 1; }
+          REFS=""
+          for digest in "${digests[@]}"; do
+            REFS="${REFS} ghcr.io/${{ github.repository_owner }}/stash@sha256:${digest}"
+          done
+          docker buildx imagetools create \
+            -t ghcr.io/${{ github.repository_owner }}/stash:pr-${PR_NUMBER}-lite \
+            ${REFS}
+
+      - name: Inspect images
+        run: |
+          docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/stash:pr-${PR_NUMBER}
+          docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/stash:pr-${PR_NUMBER}-lite
