@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
 FROM ubuntu:24.04
-# labels
 LABEL \
   org.opencontainers.image.title="Stash" \
   org.opencontainers.image.description="An organizer for your porn, written in Go." \
@@ -14,76 +13,66 @@ ARG DEBIAN_FRONTEND="noninteractive"
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETVARIANT
+ARG STASH_RELEASE
 
-# debian environment variables
 ENV \
   HOME="/root" \
   TZ="Etc/UTC" \
-  # stash environment variables
+  LANG=en_US.UTF-8 \
+  LANGUAGE=en_US:en \
+  LC_ALL=en_US.UTF-8 \
   STASH_CONFIG_FILE="/root/.stash/config.yml" \
-  # hardware acceleration env
   NVIDIA_DRIVER_CAPABILITIES="compute,video,utility" \
   NVIDIA_VISIBLE_DEVICES="all" \
   PY_VENV="/pip-install/venv" \
-  PATH="/pip-install/venv/bin:$PATH" 
+  PATH="/pip-install/venv/bin:/usr/lib/jellyfin-ffmpeg:$PATH"
 
 RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
 
 RUN \
-  apt-get update && \
-  apt-get install -y \
-    apt-utils \
-    locales && \
-    rm -rf \
-      /tmp/* \
-      /var/lib/apt/lists/* \
-      /var/tmp/* \
-      /var/log/* && \
-  sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
-  locale-gen
-ENV LANG=en_US.UTF-8  
-ENV LANGUAGE=en_US:en  
-ENV LC_ALL=en_US.UTF-8    
-
-RUN \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
   apt-get update && \
   apt-get install -y \
     --no-install-recommends \
     --no-install-suggests \
-    gnupg \
     ca-certificates \
     gosu \
     libvips-tools \
+    locales \
     python3 \
     python3-pip \
     python3-venv \
-    tzdata \
-    wget \
-    curl \
-    yq && \
-    rm -rf \
-      /tmp/* \
-      /var/lib/apt/lists/* \
-      /var/tmp/* \
-      /var/log/*
+    tzdata && \
+  sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
+  locale-gen && \
+  useradd -u 1000 -U -d /config -s /bin/false stash && \
+  usermod -G users,video stash && \
+  chmod 711 /root
 
 RUN \
-  wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - && \
-  echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+  apt-get update && \
+  apt-get install -y --no-install-recommends curl gpg && \
+  curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | \
+    gpg --dearmor -o /usr/share/keyrings/jellyfin.gpg && \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/$(awk -F'=' '/^ID=/{print $NF}' /etc/os-release) $(awk -F'=' '/^VERSION_CODENAME=/{print $NF}' /etc/os-release) main" \
+    > /etc/apt/sources.list.d/jellyfin.list && \
   apt-get update && \
   apt-get install --no-install-recommends --no-install-suggests -y \
     jellyfin-ffmpeg7 && \
-  rm -rf \
-    /tmp/* \
-    /var/lib/apt/lists/* \
-    /var/tmp/* \
-    /var/log/*
+  apt-get purge -y curl gpg && \
+  apt-get autoremove -y
 
 RUN \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
   set -ex && \
   echo "TARGETPLATFORM=$TARGETPLATFORM" && \
   echo "TARGETARCH=$TARGETARCH" && \
   echo "TARGETVARIANT=$TARGETVARIANT" && \
+  apt-get update && apt-get install -y --no-install-recommends curl && \
   case "${TARGETARCH}${TARGETVARIANT}" in \
       "amd64") STASH_ARCH="stash-linux" ;; \
       "armv7") STASH_ARCH="stash-linux-arm32v7" ;; \
@@ -91,31 +80,16 @@ RUN \
       "arm64") STASH_ARCH="stash-linux-arm64v8" ;; \
       *) echo "Unsupported architecture: ${TARGETARCH}${TARGETVARIANT}"; exit 1 ;; \
   esac && \
-  if [ -z ${STASH_RELEASE+x} ]; then \
-    STASH_RELEASE=$(curl -sX GET "https://api.github.com/repos/stashapp/stash/releases/latest" \
+  _release="${STASH_RELEASE:-}" && \
+  if [ -z "$_release" ]; then \
+    _release=$(curl -fsSL "https://api.github.com/repos/stashapp/stash/releases/latest" \
     | awk '/tag_name/{print $4;exit}' FS='[""]'); \
   fi && \
-  curl -o \
-    /usr/bin/stash -L \
-    "https://github.com/stashapp/stash/releases/download/${STASH_RELEASE}/${STASH_ARCH}" && \
-  chmod +x /usr/bin/stash
-
-RUN \
-  useradd -u 1000 -U -d /config -s /bin/false stash && \
-  usermod -G users,video stash && \
-  chmod 711 /root
-
-RUN \
-  apt-get purge -qq wget gnupg curl apt-utils && \
-  apt-get autoremove -qq && \
-  apt-get clean -qq && \
-  rm -rf \
-    /tmp/* \
-    /var/lib/apt/lists/* \
-    /var/tmp/* \
-    /var/log/*
-
-ENV PATH="${PATH}:/usr/lib/jellyfin-ffmpeg"
+  curl -fsSL -o /usr/bin/stash \
+    "https://github.com/stashapp/stash/releases/download/${_release}/${STASH_ARCH}" && \
+  chmod +x /usr/bin/stash && \
+  apt-get purge -y curl && \
+  apt-get autoremove -y
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin
 
