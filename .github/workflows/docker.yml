@@ -9,6 +9,7 @@ on:
     paths:
       - Dockerfile
       - Dockerfile.lite
+      - entrypoint.sh
 
 concurrency:
   group: docker-${{ github.workflow }}-${{ github.ref }}
