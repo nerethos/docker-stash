@@ -102,7 +102,15 @@ Starting stash...
 
 ───────────────────────────────────────
 '
-if [ -n "${PUID:-}" ] && [ -n "${PGID:-}" ]; then
+if [ -n "${PUID:-}" ] || [ -n "${PGID:-}" ]; then
+    if [ -z "${PUID:-}" ] || [ -z "${PGID:-}" ]; then
+        echo "Error: PUID and PGID must both be set" >&2
+        exit 1
+    fi
+    if ! [[ "$PUID" =~ ^[0-9]+$ ]] || ! [[ "$PGID" =~ ^[0-9]+$ ]]; then
+        echo "Error: PUID and PGID must be positive integers" >&2
+        exit 1
+    fi
     if [ "$PUID" -eq 0 ] || [ "$PGID" -eq 0 ]; then
         echo "Error: PUID/PGID cannot be 0" >&2
         exit 1
