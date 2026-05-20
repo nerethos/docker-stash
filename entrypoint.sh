@@ -108,25 +108,21 @@ if [ -n "${PUID:-}" ] || [ -n "${PGID:-}" ]; then
         exit 1
     fi
     if ! [[ "$PUID" =~ ^[0-9]+$ ]] || ! [[ "$PGID" =~ ^[0-9]+$ ]]; then
-        echo "Error: PUID and PGID must be positive integers" >&2
+        echo "Error: PUID and PGID must be numeric" >&2
         exit 1
     fi
     if [ "$PUID" -eq 0 ] || [ "$PGID" -eq 0 ]; then
-        echo "Error: PUID/PGID cannot be 0" >&2
-        exit 1
+        exec "$@"
+    fi
+    actual_uid=$(stat -c '%u' /root/.stash 2>/dev/null || echo "")
+    if [ -n "$actual_uid" ] && [ "$actual_uid" != "$PUID" ]; then
+        echo "Warning: /root/.stash is owned by UID ${actual_uid} but PUID=${PUID} — running as root to avoid permission errors."
+        echo "To enable user switching, chown the config directory to ${PUID}:${PGID} on the host first."
+        exec "$@"
     fi
     groupmod -o -g "$PGID" stash
     usermod -o -u "$PUID" stash
     echo "UID:${PUID} GID:${PGID}"
-
-    # Warn if PUID doesn't match the actual owner of the config dir
-    actual_uid=$(stat -c '%u' /root/.stash 2>/dev/null || echo "")
-    if [ -n "$actual_uid" ] && [ "$actual_uid" != "$PUID" ]; then
-        echo "Warning: /root/.stash is owned by UID ${actual_uid}, but PUID=${PUID}."
-        echo "Stash may fail with 'permission denied'. Either set PUID=${actual_uid} (and PGID to match),"
-        echo "or chown the host bind mount to ${PUID}:${PGID} before starting the container."
-    fi
-
     exec gosu stash "$@"
 fi
 exec "$@"
