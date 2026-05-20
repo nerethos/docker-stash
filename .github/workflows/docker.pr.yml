@@ -17,7 +17,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install shellcheck and bats
+        run: sudo apt-get install -y shellcheck bats
+
+      - name: shellcheck
+        run: shellcheck entrypoint.sh
+
+      - name: bats
+        run: bats test/bats/
+
   build-full:
+    needs: [test]
     outputs:
       UPSTREAM_VERSION: ${{ steps.get_version.outputs.UPSTREAM_VERSION }}
     permissions:
@@ -89,6 +105,7 @@ jobs:
           retention-days: 1
 
   build-lite:
+    needs: [test]
     outputs:
       UPSTREAM_VERSION: ${{ steps.get_version.outputs.UPSTREAM_VERSION }}
     permissions:
