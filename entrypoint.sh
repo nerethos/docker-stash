@@ -83,12 +83,6 @@ Installing dependencies...
     pip install -r $output_file
 fi
 
-PUID=${PUID:-911}
-PGID=${PGID:-911}
-if [ "$PUID" -eq 0 ] || [ "$PGID" -eq 0 ]; then
-    echo "Error: PUID/PGID cannot be 0" >&2
-    exit 1
-fi
 if [ -z "${1:-}" ]; then
     set -- "stash"
 fi
@@ -104,23 +98,31 @@ https://opencollective.com/stashapp
 
 ───────────────────────────────────────'
 echo '
-Changing to user provided UID & GID...
-'
-
-groupmod -o -g "$PGID" stash
-usermod -o -u "$PUID" stash
-echo '
-───────────────────────────────────────
-GID/UID
-───────────────────────────────────────'
-echo "
-UID:${PUID}
-GID:${PGID}"
-echo '
-───────────────────────────────────────'
-echo '
 Starting stash...
 
 ───────────────────────────────────────
 '
-exec gosu stash "$@"
+if [ -n "${PUID:-}" ] || [ -n "${PGID:-}" ]; then
+    if [ -z "${PUID:-}" ] || [ -z "${PGID:-}" ]; then
+        echo "Error: PUID and PGID must both be set" >&2
+        exit 1
+    fi
+    if ! [[ "$PUID" =~ ^[0-9]+$ ]] || ! [[ "$PGID" =~ ^[0-9]+$ ]]; then
+        echo "Error: PUID and PGID must be numeric" >&2
+        exit 1
+    fi
+    if [ "$PUID" -eq 0 ] || [ "$PGID" -eq 0 ]; then
+        exec "$@"
+    fi
+    actual_uid=$(stat -c '%u' /root/.stash 2>/dev/null || echo "")
+    if [ -n "$actual_uid" ] && [ "$actual_uid" != "$PUID" ]; then
+        echo "Warning: /root/.stash is owned by UID ${actual_uid} but PUID=${PUID} — running as root to avoid permission errors."
+        echo "To enable user switching, chown the config directory to ${PUID}:${PGID} on the host first."
+        exec "$@"
+    fi
+    groupmod -o -g "$PGID" stash
+    usermod -o -u "$PUID" stash
+    echo "UID:${PUID} GID:${PGID}"
+    exec gosu stash "$@"
+fi
+exec "$@"
