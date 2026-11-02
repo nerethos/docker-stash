@@ -85,10 +85,6 @@ fi
 
 PUID=${PUID:-911}
 PGID=${PGID:-911}
-if [ "$PUID" -eq 0 ] || [ "$PGID" -eq 0 ]; then
-    echo "Error: PUID/PGID cannot be 0" >&2
-    exit 1
-fi
 if [ -z "${1:-}" ]; then
     set -- "stash"
 fi
@@ -123,4 +119,4 @@ Starting stash...
 
 ───────────────────────────────────────
 '
-exec gosu stash "$@"
+exec "$@"

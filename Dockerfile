@@ -52,7 +52,6 @@ RUN \
     --no-install-suggests \
     gnupg \
     ca-certificates \
-    gosu \
     libvips-tools \
     python3 \
     python3-pip \
@@ -102,8 +101,8 @@ RUN \
 
 RUN \
   useradd -u 1000 -U -d /config -s /bin/false stash && \
-  usermod -G users,video stash && \
-  chmod 711 /root
+  usermod -G users stash && \
+  usermod -G video stash 
 
 RUN \
   apt-get purge -qq wget gnupg curl apt-utils && \
